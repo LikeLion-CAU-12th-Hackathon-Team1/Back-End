@@ -41,9 +41,10 @@ SECRET_KEY = get_secret("SECRET_KEY")
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    'localhost',
-    '127.0.0.1',
-    '3.35.137.232',
+    # 'localhost',
+    # '127.0.0.1',
+    # '3.35.137.232',
+    '*'
 ]
 
 
