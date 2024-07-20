@@ -165,5 +165,5 @@ CORS_ALLOWED_ORIGINS = [
     'http://localhost:5500',
     'http://127.0.0.1:5500',
     'https://likelion-iiovesport.netlify.app',
-    'saengchaein.r-e.kr'
+    'http://saengchaein.r-e.kr'
 ]
