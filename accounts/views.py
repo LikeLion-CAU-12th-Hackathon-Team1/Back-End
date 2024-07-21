@@ -44,7 +44,7 @@ def hello_world(request):
 class Kakao_login(View):
     def get(self, request):
         kakao_api = "https://kauth.kakao.com/oauth/authorize?response_type=code"
-        redirect_uri = "http://127.0.0.1:8000/account/kakao/callback/"
+        redirect_uri = KAKAO_REDIRECT
         client_id = KAKAO_CLIENT_ID
 
         return redirect(f"{kakao_api}&client_id={client_id}&redirect_uri={redirect_uri}&prompt=login")
