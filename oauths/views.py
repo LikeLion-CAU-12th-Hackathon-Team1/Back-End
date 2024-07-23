@@ -10,7 +10,7 @@ KAKAO_REDIRECT = get_secret("KAKAO_REDIRECT")
 KAKAO_CLIENT_SECRET = get_secret("KAKAO_CLIENT_SECRET")
 
 class Kakao_callback(View):
-    def get(self, request):
+    def post(self, request):
         # 프론트에서 요청 보낼 때 error 코드를 보내는 경우 대비 예외 처리 코드
         # error = request.GET.get("error")
         # if error is not None:
