@@ -58,6 +58,7 @@ DJANGO_APPS = [
 
 PROJECT_APPS = [
     'accounts',
+    'oauths',
 ]
 
 THIRD_PARTY_APPS = [
