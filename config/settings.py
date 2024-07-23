@@ -164,7 +164,7 @@ CORS_ALLOWED_ORIGINS = [
     'https://saengchaein.r-e.kr',
 ]
 
-CORS_ORIGIN_WHITELIST = [
-    'https://likelion-iiovesport.netlify.app',
-    'https://saengchaein.r-e.kr',
-]
+# CORS_ORIGIN_WHITELIST = [
+#     'https://likelion-iiovesport.netlify.app',
+#     'https://saengchaein.r-e.kr',
+# ]
