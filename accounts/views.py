@@ -41,19 +41,20 @@ def hello_world(request):
             'data' : 'post message success'
         })
     
-class Kakao_login(View):
-    def get(self, request):
-        kakao_api = "https://kauth.kakao.com/oauth/authorize?response_type=code"
-        redirect_uri = KAKAO_REDIRECT
-        client_id = KAKAO_CLIENT_ID
+# class Kakao_login(View):
+#     def get(self, request):
+#         kakao_api = "https://kauth.kakao.com/oauth/authorize?response_type=code"
+#         redirect_uri = KAKAO_REDIRECT
+#         client_id = KAKAO_CLIENT_ID
 
-        return redirect(f"{kakao_api}&client_id={client_id}&redirect_uri={redirect_uri}&prompt=login")
+#         return redirect(f"{kakao_api}&client_id={client_id}&redirect_uri={redirect_uri}&prompt=login")
     
 class Kakao_callback(View):
     def get(self, request):
-        error = request.GET.get("error")
-        if error is not None:
-            return JSONDecodeError(request.GET.get("error_description"))
+        # 프론트에서 요청 보낼 때 error 코드를 보내는 경우 대비 예외 처리 코드
+        # error = request.GET.get("error")
+        # if error is not None:
+        #     return JSONDecodeError(request.GET.get("error_description"))
 
         auth_code = request.GET.get("code")
         data = {
