@@ -39,7 +39,7 @@ class Kakao_login(View):
         return redirect(f"{kakao_api}&client_id={client_id}&redirect_uri={redirect_uri}&prompt=login")
 
 class Kakao_callback(View):
-    def get(self, request):
+    def post(self, request):
         auth_code = request.GET.get("code")
         data = {
             "grant_type" : "authorization_code",
