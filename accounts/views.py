@@ -4,6 +4,11 @@ from django.views import View
 from django.core.exceptions import ObjectDoesNotExist
 from json import JSONDecodeError
 import requests
+# from django.shortcuts import redirect
+# from config.settings import get_secret
+
+# KAKAO_CLIENT_ID = get_secret("KAKAO_CLIENT_ID")
+# KAKAO_REDIRECT = get_secret("KAKAO_REDIRECT")
 
 def hello_world(request):
     if request.method == "GET":

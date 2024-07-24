@@ -34,9 +34,17 @@ class Kakao_callback(View):
         if response.status_code == 200:
             response_data = response.json()
             access_token = response_data.get("access_token")
+            expires_in = response_data.get("expires_in")
+            refresh_token = response_data.get("refresh_token")
+            refresh_token_expires_in = response_data.get("refresh_token_expires_in")
 
             if access_token:
-                return JsonResponse({"access_token" : access_token})
+                return JsonResponse({
+                    "access_token" : access_token,
+                    "expires_in" : expires_in,
+                    "refresh_token" : refresh_token,
+                    "refresh_token_expires_in" : refresh_token_expires_in
+                    }, status=200)
             else:
                 return JsonResponse({"error" : "access_token not found"}, status=400)
 
