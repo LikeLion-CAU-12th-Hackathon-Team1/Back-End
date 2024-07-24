@@ -4,11 +4,18 @@ from django.views import View
 from django.core.exceptions import ObjectDoesNotExist
 from json import JSONDecodeError
 import requests
-# from django.shortcuts import redirect
-# from config.settings import get_secret
+from django.shortcuts import redirect
+from config.settings import get_secret
+from .serializers import RegisterLoginSerializer
+from .models import User
+from rest_framework_simplejwt.serializers import RefreshToken
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
 
-# KAKAO_CLIENT_ID = get_secret("KAKAO_CLIENT_ID")
-# KAKAO_REDIRECT = get_secret("KAKAO_REDIRECT")
+KAKAO_CLIENT_ID = get_secret("KAKAO_CLIENT_ID")
+KAKAO_REDIRECT = get_secret("KAKAO_REDIRECT")
+KAKAO_CLIENT_SECRET = get_secret("KAKAO_CLIENT_SECRET")
 
 def hello_world(request):
     if request.method == "GET":
@@ -23,10 +30,74 @@ def hello_world(request):
             'data' : 'post message success'
         })
     
-# class Kakao_login(View):
-#     def get(self, request):
-#         kakao_api = "https://kauth.kakao.com/oauth/authorize?response_type=code"
-#         redirect_uri = KAKAO_REDIRECT
-#         client_id = KAKAO_CLIENT_ID
+class Kakao_login(View):
+    def get(self, request):
+        kakao_api = "https://kauth.kakao.com/oauth/authorize?response_type=code"
+        redirect_uri = KAKAO_REDIRECT
+        client_id = KAKAO_CLIENT_ID
 
-#         return redirect(f"{kakao_api}&client_id={client_id}&redirect_uri={redirect_uri}&prompt=login")
+        return redirect(f"{kakao_api}&client_id={client_id}&redirect_uri={redirect_uri}&prompt=login")
+
+class Kakao_callback(View):
+    def get(self, request):
+        auth_code = request.GET.get("code")
+        data = {
+            "grant_type" : "authorization_code",
+            "client_id" : KAKAO_CLIENT_ID,
+            "redirection_uri" : KAKAO_REDIRECT,
+            "code" : auth_code
+        }
+
+        headers = {
+            "Content-Type": "application/x-www-form-urlencoded;charset=utf-8"
+        }
+
+        kakao_token_api = f"https://kauth.kakao.com/oauth/token?client_secret={KAKAO_CLIENT_SECRET}"
+        response = requests.post(kakao_token_api, data=data, headers=headers)
+
+        if response.status_code != 200:
+            return JsonResponse({"error" : "access_token not found"}, status=400)
+        
+        response_data = response.json()
+        access_token = response_data.get("access_token")
+
+        if access_token:
+            kakao_user_api = "https://kapi.kakao.com/v2/user/me"
+            headers = {
+                "Authorization": f"Bearer {access_token}",
+                'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8'
+            }
+            response = requests.get(kakao_user_api, headers=headers)
+            response_json = response.json()
+            print(response_json)
+
+            serializer = RegisterLoginSerializer(data=response_json.get('kakao_account'))
+
+            if serializer.is_valid(raise_exception=True):
+                user = User.get_user_or_none_by_email(serializer.validated_data['email'])
+                if user is None:
+                    user = serializer.save(request)
+
+                token = RefreshToken.for_user(user)
+                refresh_token = str(token)
+                access_token = str(token.access_token)
+                res = JsonResponse({
+                    "status" : 200,
+                    "refresh_token" : refresh_token,
+                    "access_token" : access_token
+                })
+
+                return res
+            else:
+                return JsonResponse({
+                    "status" : 400,
+                    "error" : "Failed to obtain access token"
+                })
+
+        else:
+            try:
+                error_data = response.json()
+            except ValueError:
+                error_data = response.text
+
+            return JsonResponse({"error": "Failed to obtain access token", "details": error_data}, status=response.status_code)
