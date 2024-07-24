@@ -1,6 +1,9 @@
-from django.shortcuts import render
+from django.core.exceptions import ImproperlyConfigured
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404
+from django.views import View
+from django.core.exceptions import ObjectDoesNotExist
+from json import JSONDecodeError
+import requests
 
 def hello_world(request):
     if request.method == "GET":
@@ -15,3 +18,10 @@ def hello_world(request):
             'data' : 'post message success'
         })
     
+# class Kakao_login(View):
+#     def get(self, request):
+#         kakao_api = "https://kauth.kakao.com/oauth/authorize?response_type=code"
+#         redirect_uri = KAKAO_REDIRECT
+#         client_id = KAKAO_CLIENT_ID
+
+#         return redirect(f"{kakao_api}&client_id={client_id}&redirect_uri={redirect_uri}&prompt=login")

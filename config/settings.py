@@ -41,9 +41,6 @@ SECRET_KEY = get_secret("SECRET_KEY")
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    # 'localhost',
-    # '127.0.0.1',
-    # '3.35.137.232',
     '*'
 ]
 
@@ -61,6 +58,7 @@ DJANGO_APPS = [
 
 PROJECT_APPS = [
     'accounts',
+    'oauths',
 ]
 
 THIRD_PARTY_APPS = [
@@ -74,13 +72,11 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
-    "django.middleware.csrf.CsrfViewMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
+    # "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-
-    # CORS 관련
-    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -114,6 +110,7 @@ DATABASES = {
     }
 }
 
+AUTH_USER_MODEL = 'accounts.User'
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
@@ -163,4 +160,11 @@ CORS_ALLOWED_ORIGINS = [
     'http://127.0.0.1:3000',
     'http://localhost:5500',
     'http://127.0.0.1:5500',
+    'https://likelion-iiovesport.netlify.app',
+    'https://saengchaein.r-e.kr',
 ]
+
+# CORS_ORIGIN_WHITELIST = [
+#     'https://likelion-iiovesport.netlify.app',
+#     'https://saengchaein.r-e.kr',
+# ]

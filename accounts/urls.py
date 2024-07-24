@@ -3,4 +3,5 @@ from accounts.views import *
 
 urlpatterns = [
     path('', hello_world, name = 'hello_world'),
+    # path('kakao/login/', Kakao_login.as_view(), name = 'login'),
 ]
