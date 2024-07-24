@@ -20,6 +20,5 @@ from accounts.views import *
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path('oauth/', include('oauths.urls')),
     path('account/', include('accounts.urls')),
 ]
