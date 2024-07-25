@@ -73,7 +73,7 @@ class Kakao_callback(View):
 
             serializer = RegisterLoginSerializer(data=response_json.get('kakao_account'))
 
-            if serializer.is_valid(raise_exception=True):
+            if serializer.is_valid():
                 user = User.get_user_or_none_by_email(serializer.validated_data['email'])
                 if user is None:
                     user = serializer.save(request)
