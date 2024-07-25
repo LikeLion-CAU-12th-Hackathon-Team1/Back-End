@@ -39,7 +39,7 @@ class Kakao_login(View):
         return redirect(f"{kakao_api}&client_id={client_id}&redirect_uri={redirect_uri}&prompt=login")
 
 class Kakao_callback(View):
-    def post(self, request):
+    def get(self, request):
         auth_code = request.GET.get("code")
         data = {
             "grant_type" : "authorization_code",
@@ -71,12 +71,26 @@ class Kakao_callback(View):
             response_json = response.json()
             print(response_json)
 
-            serializer = RegisterLoginSerializer(data=response_json.get('kakao_account'))
+            serialize_data = {
+                'kakao_id' : response_json.get('id'),
+                'name' : response_json.get('kakao_account').get('name'),
+                'email' : response_json.get('kakao_account').get('email')
+            }
+
+            serializer = RegisterLoginSerializer(data=serialize_data)
 
             if serializer.is_valid():
-                user = User.get_user_or_none_by_email(serializer.validated_data['email'])
+                user = User.get_user_or_none_by_kakao_id(serializer.validated_data['kakao_id'])
                 if user is None:
                     user = serializer.save(request)
+
+                if user.profile != response_json.get('properties').get('profile_image'):
+                    user.profile = response_json.get('properties').get('profile_image')
+                    user.save()
+
+                if user.nickname == "":
+                    user.nickname = response_json.get('properties').get('nickname')
+                    user.save()
 
                 token = RefreshToken.for_user(user)
                 refresh_token = str(token)
@@ -84,7 +98,13 @@ class Kakao_callback(View):
                 res = JsonResponse({
                     "status" : 200,
                     "refresh_token" : refresh_token,
-                    "access_token" : access_token
+                    "access_token" : access_token,
+                    "user" : {
+                        "name" : user.name,
+                        "nickname" : user.nickname,
+                        "email" : user.email,
+                        "profile" : user.profile
+                    }
                 })
 
                 return res

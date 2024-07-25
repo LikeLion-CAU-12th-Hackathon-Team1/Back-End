@@ -3,16 +3,17 @@ from django.contrib.auth.models import AbstractBaseUser
 
 class User(AbstractBaseUser):
     id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=100)
-    email = models.CharField(max_length=100, unique=True)
-    profile = models.ImageField(upload_to='profile/', null=True, blank=True)
+    kakao_id = models.BigIntegerField(null=False, unique=True)
+    name = models.CharField(max_length=10)
+    nickname = models.CharField(max_length=10)
+    email = models.CharField(max_length=100, null=True, unique=True)
+    profile = models.CharField(max_length=512, null=True, blank=True)
 
-    USERNAME_FIELD = 'email'
+    USERNAME_FIELD = 'kakao_id'
 
     @staticmethod
-    def get_user_or_none_by_email(email):
+    def get_user_or_none_by_kakao_id(kakao_id):
         try:
-            return User.objects.get(email=email)
+            return User.objects.get(kakao_id=kakao_id)
         except Exception:
             return None
-        
