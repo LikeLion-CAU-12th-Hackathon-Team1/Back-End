@@ -3,7 +3,8 @@ from django.contrib.auth.models import AbstractBaseUser
 
 class User(AbstractBaseUser):
     id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=10)
+    nickname = models.CharField(max_length=10)
     email = models.CharField(max_length=100, unique=True)
     profile = models.ImageField(upload_to='profile/', null=True, blank=True)
 
@@ -15,4 +16,3 @@ class User(AbstractBaseUser):
             return User.objects.get(email=email)
         except Exception:
             return None
-        
