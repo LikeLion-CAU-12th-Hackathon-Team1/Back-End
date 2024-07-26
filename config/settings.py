@@ -37,10 +37,27 @@ def get_secret(setting, secrets=secrets):
         raise ImproperlyConfigured(error_msg)
 
 SECRET_KEY = get_secret("SECRET_KEY")
+
+# DB(RDS) 관련
 DB_NAME = get_secret("DB_NAME")
 DB_USERNAME = get_secret("DB_USERNAME")
 DB_PASSWORD = get_secret("DB_PASSWORD")
 DB_HOST = get_secret("DB_HOST")
+
+# AWS 관련
+AWS_ACCESS_KEY_ID = get_secret("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = get_secret("AWS_SECRET_ACCESS_KEY")
+AWS_REGION = 'ap-northeast-2'
+
+# S3 관련
+AWS_STORAGE_BUCKET_NAME = 'sci-hackathon1-bucket'
+AWS_S3_CUSTOM_DOMAIN = '%s.s3.%s.amazonaws.com' % (AWS_STORAGE_BUCKET_NAME,AWS_REGION)
+AWS_S3_OBJECT_PARAMETERS = {
+    'CacheControl': 'max-age=86400',
+}
+
+# 장고의 기본 파일저장소 위치를 S3버킷으로 지정.
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage' 
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -71,6 +88,7 @@ THIRD_PARTY_APPS = [
     'corsheaders',
     'rest_framework',
     'rest_framework_simplejwt',
+    'storages',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + PROJECT_APPS + THIRD_PARTY_APPS
