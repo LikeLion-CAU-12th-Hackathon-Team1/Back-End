@@ -1,7 +1,8 @@
 from django.db import models
+from accounts.models import User
+from places.models import Sigg
 
 # Create your models here.
-# workation_id, start_date, end_date, work, balance
 
 # 업무방식(단일)
 class Workation_work(models.IntegerChoices):
@@ -32,12 +33,6 @@ class Workation_rest_type(models.IntegerChoices):
     yoga = 13, 'yoga'
     heal = 14, 'heal'
     climb = 15, 'climb'
-    
-class Workation_rest(models.Model):
-    rest_id = models.AutoField(primary_key=True)
-    rest_type = models.IntegerField(
-        choices = Workation_rest_type.choices,
-    )
 
 # 휴식
 class Workation_space_type(models.IntegerChoices):
@@ -46,18 +41,11 @@ class Workation_space_type(models.IntegerChoices):
     independent = 3, 'independent'
     sum = 4, 'sun'
 
-class Workation_space(models.Model):
-    space_id = models.AutoField(primary_key=True)
-    space_type = models.IntegerField(
-        choices = Workation_space_type.choices,
-        default = Workation_space_type.beach,
-    )
-
 
 class Workation(models.Model):
     workation_id = models.AutoField(primary_key=True)
-    # id
-    # sigg_id
+    id = models.ForeignKey(User, on_delete=models.CASCADE)
+    sigg_id = models.ForeignKey(Sigg, on_delete=models.CASCADE)
     start_date = models.BigIntegerField()
     end_date = models.BigIntegerField()
     work = models.IntegerField(
@@ -67,6 +55,21 @@ class Workation(models.Model):
     balance = models.IntegerField(
         choices = Workation_balance.choices,
         default = Workation_balance.balance,
+    )
+
+class Workation_space(models.Model):
+    workation_id = models.ForeignKey(Workation, related_name='space', on_delete=models.CASCADE)
+    space_id = models.AutoField(primary_key=True)
+    space_type = models.IntegerField(
+        choices = Workation_space_type.choices,
+        default = Workation_space_type.beach,
+    )
+
+class Workation_rest(models.Model):
+    workation_id = models.ForeignKey(Workation, related_name='rest', on_delete=models.CASCADE)
+    rest_id = models.AutoField(primary_key=True)
+    rest_type = models.IntegerField(
+        choices = Workation_rest_type.choices,
     )
 
 

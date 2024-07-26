@@ -19,6 +19,7 @@ class Sigg(models.Model):
 
 class Place(models.Model):
     place_id = models.AutoField(primary_key=True)
+    place_code = models.IntegerField()
     sigg_id = models.ForeignKey(Sigg, on_delete=models.CASCADE)
     placename = models.CharField(max_length=30, null=False)
     address = models.CharField(max_length=200, null=False)
