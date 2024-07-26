@@ -40,6 +40,7 @@ SECRET_KEY = get_secret("SECRET_KEY")
 DB_NAME = get_secret("DB_NAME")
 DB_USERNAME = get_secret("DB_USERNAME")
 DB_PASSWORD = get_secret("DB_PASSWORD")
+DB_HOST = get_secret("DB_HOST")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -119,8 +120,8 @@ DATABASES = {
         'NAME': DB_NAME,
 		'USER': DB_USERNAME, # root로 접속하여 DB를 만들었다면 'root'
 		'PASSWORD': DB_PASSWORD,
-		'HOST': '127.0.0.1',
-		'PORT': '13306', # default mysql portnumber
+		'HOST': DB_HOST,
+		'PORT': '3306', # default mysql portnumber
     }
 }
 
