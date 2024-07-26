@@ -119,7 +119,7 @@ DATABASES = {
         'NAME': DB_NAME,
 		'USER': DB_USERNAME, # root로 접속하여 DB를 만들었다면 'root'
 		'PASSWORD': DB_PASSWORD,
-		'HOST': 'localhost',
+		'HOST': '127.0.0.1',
 		'PORT': '13306', # default mysql portnumber
     }
 }
