@@ -16,7 +16,7 @@ class Workation_balance(models.IntegerChoices):
     balance = 2, 'balance'
     rest = 3, 'rest'
 
-# 업무공간(복수)
+# 휴식 (복수)
 class Workation_rest_type(models.IntegerChoices):
     workshop = 1, 'workshop'
     game = 2, 'game'
@@ -34,7 +34,7 @@ class Workation_rest_type(models.IntegerChoices):
     heal = 14, 'heal'
     climb = 15, 'climb'
 
-# 휴식
+# 업무공간(복수)
 class Workation_space_type(models.IntegerChoices):
     beach = 1, 'beach'
     open = 2, 'open'
@@ -45,9 +45,11 @@ class Workation_space_type(models.IntegerChoices):
 class Workation(models.Model):
     workation_id = models.AutoField(primary_key=True)
     id = models.ForeignKey(User, on_delete=models.CASCADE)
-    sigg_id = models.ForeignKey(Sigg, on_delete=models.CASCADE)
+    # sigg_id = models.ForeignKey(Sigg, on_delete=models.CASCADE)
     start_date = models.BigIntegerField()
     end_date = models.BigIntegerField()
+    start_sleep = models.IntegerField(default=0000)
+    end_sleep = models.IntegerField(default=2359)
     work = models.IntegerField(
         choices = Workation_work.choices,
         default = Workation_work.mid,

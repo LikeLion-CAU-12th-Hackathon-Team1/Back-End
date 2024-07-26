@@ -40,6 +40,7 @@ SECRET_KEY = get_secret("SECRET_KEY")
 DB_NAME = get_secret("DB_NAME")
 DB_USERNAME = get_secret("DB_USERNAME")
 DB_PASSWORD = get_secret("DB_PASSWORD")
+DB_HOST = get_secret("DB_HOST")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -110,21 +111,21 @@ WSGI_APPLICATION = "config.wsgi.application"
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 DATABASES = {
-    # "default": {
-    #     "ENGINE": "django.db.backends.sqlite3",
-    #     "NAME": BASE_DIR / "db.sqlite3",
-    # }
-    "default" : {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': DB_NAME,
-		'USER': DB_USERNAME, # root로 접속하여 DB를 만들었다면 'root'
-		'PASSWORD': DB_PASSWORD,
-		'HOST': #'localhost',
-		'PORT': '13306', # default mysql portnumber
-        'OPTIONS': {
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
-        }
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
     }
+    # "default" : {
+    #     'ENGINE': 'django.db.backends.mysql',
+    #     'NAME': DB_NAME,
+	# 	'USER': DB_USERNAME, # root로 접속하여 DB를 만들었다면 'root'
+	# 	'PASSWORD': DB_PASSWORD,
+	# 	'HOST': DB_HOST,
+	# 	'PORT': '3306', # default mysql portnumber
+    #     # 'OPTIONS': {
+    #     #     'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
+    #     # }
+    # }
 }
 
 AUTH_USER_MODEL = 'accounts.User'
