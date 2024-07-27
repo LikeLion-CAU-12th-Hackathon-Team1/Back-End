@@ -1,5 +1,4 @@
 from django.shortcuts import render
-from django.http import HttpResponse
 from .models import *
 from .serializers import *
 
@@ -18,3 +17,16 @@ from rest_framework import generics
 class WorkationRegisterGenericAPIView(generics.ListCreateAPIView):
     queryset = Workation.objects.all()
     serializer_class = WorkationSerializer
+
+class TimeTaskGenericAPIView(generics.ListCreateAPIView):
+    queryset = Time_task.objects.all()
+    serializer_class = TimeTaskSerializer
+
+class DailyWorkationGenericAPIView(generics.ListCreateAPIView):
+    queryset = Daily_workation.objects.all()
+    serializer_class = DailyWorkationSerializer
+
+# class WorkationScheduleGenericAPIView(generics.RetrieveAPIView):
+#     queryset = Daily_workation.objects.all()
+#     serializer_class = WorkationScheduleSerializer
+#     lookup_field = 'daily_workation_id'
