@@ -111,9 +111,23 @@ WSGI_APPLICATION = "config.wsgi.application"
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 DATABASES = {
+<<<<<<< HEAD
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": BASE_DIR / "db.sqlite3",
+=======
+    # "default": {
+    #     "ENGINE": "django.db.backends.sqlite3",
+    #     "NAME": BASE_DIR / "db.sqlite3",
+    # }
+    "default" : {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': DB_NAME,
+		'USER': DB_USERNAME, # root로 접속하여 DB를 만들었다면 'root'
+		'PASSWORD': DB_PASSWORD,
+		'HOST': DB_HOST,
+		'PORT': '3306', # default mysql portnumber
+>>>>>>> d52781d4247abbb1c36b680a729110b22c9d7a77
     }
     # "default" : {
     #     'ENGINE': 'django.db.backends.mysql',
