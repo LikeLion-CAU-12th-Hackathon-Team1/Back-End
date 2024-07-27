@@ -139,7 +139,12 @@ DATABASES = {
 		'USER': DB_USERNAME, # root로 접속하여 DB를 만들었다면 'root'
 		'PASSWORD': DB_PASSWORD,
 		'HOST': DB_HOST,
-		'PORT': '3306', # default mysql portnumber
+        'PORT': '3306',
+        # 'HOST' : '127.0.0.1',
+		# 'PORT': '13306', # default mysql portnumber
+        'OPTIONS': {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
+        }
     }
 }
 
