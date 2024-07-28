@@ -110,7 +110,7 @@ class Task_complete(models.IntegerChoices):
 class Task(models.Model):
     task_id = models.AutoField(primary_key=True)
     daily_workation_id = models.ForeignKey(Daily_workation, related_name='task', on_delete=models.CASCADE)
-    description = models.CharField(max_length=100)
+    description = models.CharField(max_length=28)
     complete = models.IntegerField(
         choices = Task_complete.choices,
         default = Task_complete.N,
