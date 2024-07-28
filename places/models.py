@@ -5,7 +5,7 @@ class Place_category(models.IntegerChoices):
     OFFICE = 2, '공유오피스'
     NATURE = 3, '자연'
     FOOD = 4, '먹거리'
-    CULTURE = 5, '문화체험'
+    WELLNESS = 5, '웰니스'
 
 class Sido(models.Model):
     sido_id = models.AutoField(primary_key=True)
