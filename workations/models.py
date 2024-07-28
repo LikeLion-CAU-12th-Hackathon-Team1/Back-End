@@ -65,7 +65,6 @@ class Workation_space(models.Model):
     space_id = models.AutoField(primary_key=True)
     space_type = models.IntegerField(
         choices = Workation_space_type.choices,
-        default = Workation_space_type.beach,
     )
 
 class Workation_rest(models.Model):

@@ -5,12 +5,14 @@ from .models import *
 class WorkationSpaceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Workation_space
-        fields = '__all__' # ('space_type',)
+        read_only_fields = ('workation_id', 'space_id',)
+        fields = ('space_type',)
 
 class WorkationRestSerializer(serializers.ModelSerializer):
     class Meta:
         model = Workation_rest
-        fields = '__all__' # ('rest_type',)
+        read_only_fields = ('workation_id', 'rest_id',)
+        fields = ('rest_type',)
 
 class WorkationSerializer(serializers.ModelSerializer):
     space = WorkationSpaceSerializer(many=True)
@@ -18,9 +20,27 @@ class WorkationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Workation
-        fields = ('workation_id', 'id', 'sigg_id', 'start_date', 'end_date', 'work', 'balance', 'space', 'rest', 'start_sleep', 'end_sleep')
+        read_only_fields = ('workation_id',)
+        fields = ('id', 'sigg_id', 'start_date', 'end_date', 'work', 'balance', 'space', 'rest', 'start_sleep', 'end_sleep',)
 
-
+    def create(self, validated_data):
+        # Extract nested data for space and rest
+        space_data = validated_data.pop('space', [])
+        rest_data = validated_data.pop('rest', [])
+        
+        # Create Workation instance
+        workation = Workation.objects.create(**validated_data)
+        
+        # Create related Workation_space instances
+        for space in space_data:
+            Workation_space.objects.create(workation=workation, **space)
+        
+        # Create related Workation_rest instances
+        for rest in rest_data:
+            Workation_rest.objects.create(workation=workation, **rest)
+        
+        return workation
+    
 # 워케이션 오늘 일정
 ## 시간표
 class TaskSerializer(serializers.ModelSerializer):
@@ -33,53 +53,31 @@ class TimeTaskSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Time_task
-        fields = ('time_workation_id', 'task_id', 'task',)
+        read_only_fields = ('time_workation_id', 'task_id')
+        fields = ('task',)
 
 class TimeWorkationSerializer(serializers.ModelSerializer):
-    timetask = TimeTaskSerializer()
+    timetask = TimeTaskSerializer() # many=True
 
     class Meta:
         model = Time_workation
         fields = ('start_time', 'end_time', 'sort' ,'timetask',)
 
 class DailyWorkationSerializer(serializers.ModelSerializer):
-    timeworkation = TimeWorkationSerializer()
+    timeworkation = TimeWorkationSerializer() # many=True
 
     class Meta:
         model = Daily_workation
-        fields = ('workation_id', 'daily_workation_id', 'date', 'timeworkation', 'memo',) # '__all__' # ('Workation_id', 'date', 'timetask', 'task', 'memo')
+        read_only_fields = ('workation_id', 'daily_workation_id', 'date', )
+        fields = ('timeworkation', 'memo',) # '__all__' # ('Workation_id', 'date', 'timetask', 'task', 'memo')
 
 
 # 워케이션 전체 일정
-## 전체 정보
-# class WorkationRegisterDataSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Workation
-#         fields = ('workation_id', 'start_date', 'end_date', )
+class WorkationScheduleSerializer(serializers.ModelSerializer):
+    daily = DailyWorkationSerializer() # many=True
 
-## 개별 정보
-# class DailyWorkationDataSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Daily_workation
-#         fields = ('daily_workation_id', 'date', 'memo',)
-
-# ## 개별 시간표
-# class TimeWorkationDataSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Time_workation
-#         fields = ('sort', 'start_time', 'end_time',)
-
-# ## 개별 투두
-# class TaskDataSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Task
-#         fields = ('description', 'complete',)
-
-# class WorkationScheduleSerializer(serializers.ModelSerializer):
-#     daily = DailyWorkationDataSerializer()
-#     time = TimeWorkationDataSerializer()
-#     task = TaskDataSerializer()
-
-#     class Meta:
-#         model = Workation
-#         fields = ('start_date', 'end_date', 'daily_workation_id', 'start_time', 'end_time', 'date', 'memo', 'description', 'sort',)
+    class Meta:
+        model = Workation
+        read_only_fields = ('id', 'sigg_id', 'start_date', 'end_date', 'work', 'space', )
+        exclude = ('start_sleep', 'end_sleep', )
+        # fields = '__all__'
