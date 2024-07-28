@@ -5,7 +5,7 @@ class Place_category(models.IntegerChoices):
     OFFICE = 2, '공유오피스'
     NATURE = 3, '자연'
     FOOD = 4, '먹거리'
-    CULTURE = 5, '문화체험'
+    WELLNESS = 5, '웰니스'
 
 class Sido(models.Model):
     sido_id = models.AutoField(primary_key=True)
@@ -20,9 +20,8 @@ class Sigg(models.Model):
 
 class Place(models.Model):
     place_id = models.AutoField(primary_key=True)
-    place_code = models.IntegerField()
+    place_code = models.BigIntegerField()
     sigg_id = models.ForeignKey(Sigg, on_delete=models.CASCADE)
-    place_code = models.IntegerField(null=True)
     placename = models.CharField(max_length=30, null=False)
     address = models.CharField(max_length=200, null=False)
     image = models.URLField(max_length=512, null=True)

@@ -6,4 +6,7 @@ from .views import *
 
 urlpatterns = [
     path('', WorkationRegisterGenericAPIView.as_view()),
+    path('timetask/', TimeTaskGenericAPIView.as_view()),
+    path('daily/', DailyWorkationGenericAPIView.as_view()),
+    # path('schedule/', WorkationScheduleGenericAPIView.as_view()),
 ]
