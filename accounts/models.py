@@ -9,7 +9,7 @@ class User(AbstractBaseUser):
     email = models.CharField(max_length=100, null=True, unique=True)
     profile = models.CharField(max_length=512, null=True, blank=True)
 
-    USERNAME_FIELD = 'kakao_id'
+    USERNAME_FIELD = 'email'
 
     @staticmethod
     def get_user_or_none_by_kakao_id(kakao_id):
