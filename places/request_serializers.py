@@ -4,6 +4,7 @@ import boto3
 from uuid import uuid4
 from django.core.files.base import ContentFile
 from .models import Sigg
+from PIL import Image
 from config.settings import AWS_STORAGE_BUCKET_NAME, AWS_S3_CUSTOM_DOMAIN, AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
 
 class PlaceCreateSerializer(serializers.ModelSerializer):
@@ -40,7 +41,10 @@ class PlaceCreateSerializer(serializers.ModelSerializer):
             region_name=AWS_REGION,
             aws_access_key_id=AWS_ACCESS_KEY_ID,
             aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
-        file_content = ContentFile(photo.read())
+        img = Image.open(photo)
+        width, height = 317, 265
+        resized_img = img.resize((width, height))
+        file_content = ContentFile(resized_img.read())
         file_name = f'{uuid4()}.jpg'
         s3_client.upload_fileobj(
             file_content,
