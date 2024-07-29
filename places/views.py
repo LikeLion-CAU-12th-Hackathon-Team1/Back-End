@@ -26,9 +26,9 @@ class CategoryPlace(views.APIView):
     serializer_class = ListPlaceSerializer
     queryset = Place.objects.all()
 
-    def get(self, request, sigg_id_id):
+    def get(self, request, sigg_id):
         category = request.GET.get('category')
-        places = Place.objects.filter(sigg_id_id=sigg_id_id).filter(category=category)
+        places = Place.objects.filter(sigg=sigg_id).filter(category=category)
         serializer = ListPlaceSerializer(places, many=True)
         return Response(serializer.data)
 
