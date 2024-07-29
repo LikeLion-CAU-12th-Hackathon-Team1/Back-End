@@ -1,8 +1,5 @@
-from django.core.exceptions import ImproperlyConfigured
 from django.http import JsonResponse
 from django.views import View
-from django.core.exceptions import ObjectDoesNotExist
-from json import JSONDecodeError
 import requests
 from django.shortcuts import redirect
 from config.settings import get_secret
@@ -73,7 +70,6 @@ class Kakao_callback(View):
             }
             response = requests.get(kakao_user_api, headers=headers)
             response_json = response.json()
-            print(response_json)
 
             serialize_data = {
                 'kakao_id' : response_json.get('id'),
