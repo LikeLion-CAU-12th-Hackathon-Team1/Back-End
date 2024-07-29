@@ -4,42 +4,51 @@ from places.models import Sigg
 
 # Create your models here.
 
-# 업무방식(단일)
+# 업무 방식(단일)
 class Workation_work(models.IntegerChoices):
-    early = 1, 'early'
-    mid = 2, 'mid'
-    late = 3, 'late'
+    early = 1, 'early' # 오전부터 하루를 시작하고 싶어요
+    mid = 2, 'mid' # 여유롭게 점심부터 시작하고 싶어요
+    late = 3, 'late' # 느긋하게 오후부터 시작하고 싶어요
 
-# 일과 쉼의 등록(단일)
+# 일과 쉼(단일)
 class Workation_balance(models.IntegerChoices):
-    work = 1, 'work'
-    balance = 2, 'balance'
-    rest = 3, 'rest'
+    work = 1, 'work' # 휴식보다 일을 집중적으로 하고 싶어요
+    balance = 2, 'balance' # 일과 휴식의 균형이 중요해요
+    rest = 3, 'rest' # 일보다 휴식을 주로 하고 싶어요
 
-# 휴식 (복수)
-class Workation_rest_type(models.IntegerChoices):
-    workshop = 1, 'workshop'
-    game = 2, 'game'
-    read = 3, 'read'
-    ride = 4, 'ride'
-    video = 5, 'video'
-    art = 6, 'art'
-    walk = 7, 'walk'
-    surf = 8, 'surf'
-    shop = 9, 'shop'
-    sport = 10, 'sport'
-    activity = 11, 'activity'
-    exercise = 12, 'exercise'
-    yoga = 13, 'yoga'
-    heal = 14, 'heal'
-    climb = 15, 'climb'
+# 선호하는 업무 공간(복수):
+class Workation_space_type(models.Model):
+    space_id = models.AutoField(primary_key=True)
+    space_choices = (
+        (1, '바다가 보이는 공간'),
+        (2, '시야 탁 트인 개방적인 공간'),
+        (3, '엄무에 집중할 수 있는 나만의 독립적인 공간'),
+        (4, '채광이 좋은 공간'),
+    )
+    space_type = models.IntegerField(choices=space_choices)
 
-# 업무공간(복수)
-class Workation_space_type(models.IntegerChoices):
-    beach = 1, 'beach'
-    open = 2, 'open'
-    independent = 3, 'independent'
-    sum = 4, 'sun'
+
+# 휴식(복수):
+class Workation_rest_type(models.Model):
+    rest_id = models.AutoField(primary_key=True)
+    rest_choices = (
+        (1, '공방'),
+        (2, '게임'),
+        (3, '독서'),
+        (4, '라이딩'),
+        (5, '영상'),
+        (6, '미술'),
+        (7, '산책'),
+        (8, '서핑'),
+        (9, '쇼핑'),
+        (10, '스포츠'),
+        (11, '액티비티'),
+        (12, '운동'),
+        (13, '요가'),
+        (14, '자연힐링'),
+        (15, '등산'),
+    )
+    rest_type = models.IntegerField(choices=rest_choices)
 
 
 # 전체
@@ -62,19 +71,12 @@ class Workation(models.Model):
 
 class Workation_space(models.Model):
     workation_id = models.ForeignKey(Workation, related_name='space', on_delete=models.CASCADE)
-    space_id = models.AutoField(primary_key=True)
-    space_type = models.IntegerField(
-        choices = Workation_space_type.choices,
-        default = Workation_space_type.beach,
-    )
+    space_id = models.ForeignKey(Workation_space_type, related_name='spacetype', on_delete=models.CASCADE)
+
 
 class Workation_rest(models.Model):
     workation_id = models.ForeignKey(Workation, related_name='rest', on_delete=models.CASCADE)
-    rest_id = models.AutoField(primary_key=True)
-    rest_type = models.IntegerField(
-        choices = Workation_rest_type.choices,
-    )
-
+    rest_id = models.ForeignKey(Workation_rest_type, related_name='resttype', on_delete=models.CASCADE)
 
 
 # 데일리
