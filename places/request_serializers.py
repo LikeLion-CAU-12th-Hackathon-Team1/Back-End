@@ -17,14 +17,14 @@ class PlaceCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Place
-        read_only_fields = ('sigg_id',)
+        read_only_fields = ('sigg',)
         fields = '__all__'
 
     def create(self, validated_data):
         photo = validated_data.pop('photo', None)
         photo_url = self.upload_image(photo)
         validated_data['image'] = photo_url
-        validated_data['sigg_id'] = Sigg.objects.get(pk=validated_data['sigg_id_id'])
+        validated_data['sigg'] = Sigg.objects.get(pk=validated_data['sigg'])
         return super().create(validated_data)
     
     def update(self, instance, validated_data):
