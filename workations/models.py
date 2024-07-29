@@ -54,8 +54,8 @@ class Workation_rest_type(models.Model):
 # 전체
 class Workation(models.Model):
     workation_id = models.AutoField(primary_key=True)
-    id = models.ForeignKey(User, on_delete=models.CASCADE)
-    sigg_id = models.ForeignKey(Sigg, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    sigg = models.ForeignKey(Sigg, on_delete=models.CASCADE)
     start_date = models.BigIntegerField()
     end_date = models.BigIntegerField()
     start_sleep = models.IntegerField(default=0000)
@@ -70,19 +70,19 @@ class Workation(models.Model):
     )
 
 class Workation_space(models.Model):
-    workation_id = models.ForeignKey(Workation, related_name='space', on_delete=models.CASCADE)
-    space_id = models.ForeignKey(Workation_space_type, related_name='spacetype', on_delete=models.CASCADE)
+    workation = models.ForeignKey(Workation, related_name='space', on_delete=models.CASCADE)
+    space = models.ForeignKey(Workation_space_type, related_name='spacetype', on_delete=models.CASCADE)
 
 
 class Workation_rest(models.Model):
-    workation_id = models.ForeignKey(Workation, related_name='rest', on_delete=models.CASCADE)
-    rest_id = models.ForeignKey(Workation_rest_type, related_name='resttype', on_delete=models.CASCADE)
+    workation = models.ForeignKey(Workation, related_name='rest', on_delete=models.CASCADE)
+    rest = models.ForeignKey(Workation_rest_type, related_name='resttype', on_delete=models.CASCADE)
 
 
 # 데일리
 class Daily_workation(models.Model):
     daily_workation_id = models.AutoField(primary_key=True)
-    workation_id = models.ForeignKey(Workation, related_name='daily', on_delete=models.CASCADE)
+    workation = models.ForeignKey(Workation, related_name='daily', on_delete=models.CASCADE)
     date = models.BigIntegerField()
     memo = models.CharField(max_length=200)
 
@@ -95,7 +95,7 @@ class Time_workation_sort(models.IntegerChoices):
     
 class Time_workation(models.Model):
     time_workation_id = models.AutoField(primary_key=True)
-    daily_workation_id = models.ForeignKey(Daily_workation, related_name='timeworkation', on_delete=models.CASCADE)
+    daily_workation = models.ForeignKey(Daily_workation, related_name='timeworkation', on_delete=models.CASCADE)
     sort = models.IntegerField(
         choices = Time_workation_sort.choices,
         default = Time_workation_sort.etc,
@@ -111,7 +111,7 @@ class Task_complete(models.IntegerChoices):
 
 class Task(models.Model):
     task_id = models.AutoField(primary_key=True)
-    daily_workation_id = models.ForeignKey(Daily_workation, related_name='task', on_delete=models.CASCADE)
+    daily_workation = models.ForeignKey(Daily_workation, related_name='task', on_delete=models.CASCADE)
     description = models.CharField(max_length=28)
     complete = models.IntegerField(
         choices = Task_complete.choices,
@@ -120,5 +120,5 @@ class Task(models.Model):
 
 
 class Time_task(models.Model):
-    time_workation_id = models.ForeignKey(Time_workation, on_delete=models.CASCADE)
-    task_id = models.ForeignKey(Task, related_name='timetask', on_delete=models.CASCADE)
+    time_workation = models.ForeignKey(Time_workation, on_delete=models.CASCADE)
+    task = models.ForeignKey(Task, related_name='timetask', on_delete=models.CASCADE)
