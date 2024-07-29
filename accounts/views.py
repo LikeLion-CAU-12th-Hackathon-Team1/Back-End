@@ -49,14 +49,15 @@ class Kakao_callback(View):
             "grant_type" : "authorization_code",
             "client_id" : KAKAO_CLIENT_ID,
             "redirection_uri" : KAKAO_REDIRECT,
-            "code" : auth_code
+            "code" : auth_code,
+            'client_secret': KAKAO_CLIENT_SECRET
         }
 
         headers = {
             "Content-Type": "application/x-www-form-urlencoded;charset=utf-8"
         }
 
-        kakao_token_api = f"https://kauth.kakao.com/oauth/token?client_secret={KAKAO_CLIENT_SECRET}"
+        kakao_token_api = "https://kauth.kakao.com/oauth/token"
         response = requests.post(kakao_token_api, data=data, headers=headers)
 
         if response.status_code != 200:
