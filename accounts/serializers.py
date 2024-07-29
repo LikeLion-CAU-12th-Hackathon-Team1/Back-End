@@ -13,7 +13,7 @@ class RegisterLoginSerializer(serializers.ModelSerializer):
 
     def save(self, request):
         user = User.objects.create(
-            kakao_id = self.validated_data['kakao_id'],
+            kakao_id = str(self.validated_data['kakao_id']),
             name = self.validated_data['name'],
             email = self.validated_data['email']
         )
