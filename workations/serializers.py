@@ -24,7 +24,8 @@ class WorkationSerializer(serializers.ModelSerializer):
         model = Workation
         read_only_fields = ('workation_id', 'space_id', 'rest_id',)
         fields = ('id', 'sigg_id', 'start_date', 'end_date', 'work', 'balance', 'space', 'rest', 'start_sleep', 'end_sleep',)
-    
+
+
 # 워케이션 오늘 일정
 ## 시간표
 class TaskSerializer(serializers.ModelSerializer):
@@ -33,7 +34,7 @@ class TaskSerializer(serializers.ModelSerializer):
         fields = ('description', 'complete',)
 
 class TimeTaskSerializer(serializers.ModelSerializer):
-    task = TaskSerializer()
+    task = TaskSerializer(many=True)
 
     class Meta:
         model = Time_task
