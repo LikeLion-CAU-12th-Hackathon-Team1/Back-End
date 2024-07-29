@@ -5,15 +5,6 @@ import json
 
 OPEN_AI_API_KEY = get_secret("OPEN_AI_API_KEY")
 
-# Schedule must be empty for 7 hours from bedtime.
-#         Do not schedule work periods during bedtime to work start time.
-#         Can schedule rest periods during after 7 hours from bedtime to work start time.
-#         Create a daily schedule with alternating frequent work and rest periods.
-#         The sum of work hours in schedule should be equal to total_work_hours.
-#         The sum of rest hours in schedule should be equal to total_rest_hours.
-#         Do not exceed the total work hours or total rest hours.
-#         You do not have to fill all the hours in a day.
-
 class CreateTimeTable():
     def __init__(self):
         self.client = OpenAI(api_key=OPEN_AI_API_KEY)
@@ -26,22 +17,61 @@ class CreateTimeTable():
         Total work hours: {total_work_hours}
         Total rest hours: {total_rest_hours}
         
-        Don't feel the period bedtime after 7hours.
-        Create a daily schedule with alternating frequently work and rest periods.
-        Sum of work hours must be equal to total_work_hours and must not over the total work hours.
-        Sum of rest hours must be equal to total_rest_hours and must not over the total rest hours.
-        Don't exceed the total work hours or total rest hours.
-        Dont't fill work time and rest time at bedtime to work start time.
-        You don't have to fill all the hours in a day.
+        Create a daily schedule with alternating work and rest periods. The total work hours must exactly match the "Total work hours," and the total rest hours must exactly match the "Total rest hours."
+
+        Bedtime to 8 hours from Bedtime is reserved for sleeping. Do not schedule any activities during this time.
+        Work and rest periods could alternate.
+        Ensure that the sum of all work hours equals the Total work hours.
+        Ensure that the sum of all rest hours equals the Total rest hours.
+        Do not exceed the Total work hours or the Total rest hours.
+        Do not schedule any activities from Bedtime until the start of the work period in the morning.
+        Both start_time and end_time must be in HH:00 format.
+        Do not response with start_time and end_time as null values.
+        Do not take into account the general patterns of life in real life; base the schedule solely on the input data.
+
+        Example Input:
+        - Bedtime: 24:00
+        - Total work hours: 8
+        - Total rest hours: 8
+        - Start time: 08:00
+
+        Example Output:
+        - 08:00-09:00 Work
+        - 09:00-10:00 Rest
+        - 10:00-11:00 Work
+        - ...
+        - 24:00-08:00 Sleeping
+
+        Make a schedule that satisfies the input dataset.
+        The result schedule is from 00:00 to 24:00.
+        Example:
+        - 05:00-13:00 Sleeping
+        - 13:00-14:00 Work
+        - ...
+        - 24:00-02:00 Work
+        - 02:00-05:00 est
+        should be:
+        - 00:00-02:00 Work
+        - 02:00-05:00 Rest
+        - 05:00-13:00 Sleeping
+        - 13:00-14:00 Work
+        ...
+        22:00-24:00 Rest
 
         Provide the schedule in JSON format with the following structure:
         [
             {{
-                "work_start_time": "HH:MM",
-                "work_end_time": "HH:MM",
-                "rest_start_time": "HH:MM",
-                "rest_end_time": "HH:MM"
+                "work_start_time": "HH:00",
+                "work_end_time": "HH:00"
             }},
+            {{
+                "rest_start_time": "HH:00",
+                "rest_end_time": "HH:00"
+            }},
+            {{
+                "rest_start_time": "HH:00",
+                "rest_end_time": "HH:00"
+            }}
             ...
         ]
         """
@@ -51,7 +81,7 @@ class CreateTimeTable():
                 {"role": "system", "content": prompt},
                 {"role": "user", "content": f" {bedtime} {work_start_time} {total_work_hours} {total_rest_hours}"},
             ],
-            model = "gpt-3.5-turbo",
+            model = "gpt-4o",
         )
 
         print(response.choices[0])
@@ -59,4 +89,4 @@ class CreateTimeTable():
 
 
 ctt = CreateTimeTable()
-ctt.create_time_table("22:00", "08:00", 9, 6)
+ctt.create_time_table("08:00", "16:00", 6, 10)
