@@ -8,4 +8,3 @@ class ListPlaceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Place
         fields = ['place_code', 'placename', 'image', 'report', 'sigg']
-        # exclude = ['place_id', 'address', 'category', 'sigg_id']

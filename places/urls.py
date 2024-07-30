@@ -1,5 +1,6 @@
 from .views import ListCreatePlace, CategoryPlace
 from django.urls import path
+from .views import SidoListCreateAPIView, SiggListCreateAPIView
 
 urlpatterns = [
     path('', ListCreatePlace.as_view(), name='place-list'),

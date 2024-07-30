@@ -19,3 +19,15 @@ class RegisterLoginSerializer(serializers.ModelSerializer):
         )
 
         return user
+
+class UserNicknameSerializer(serializers.ModelSerializer):
+    nickname = serializers.CharField(required=True)
+
+    class Meta:
+        model = User
+        fields = ['nickname']
+
+    def update(self, instance, validated_data):
+        instance.nickname = validated_data.get('nickname', instance.nickname)
+        instance.save()
+        return instance
