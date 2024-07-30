@@ -110,7 +110,7 @@ class TaskSerializer(serializers.ModelSerializer):
 
 # 시간 단위 워케이션-할 일 중간 테이블.
 class TimeTaskSerializer(serializers.ModelSerializer):
-    task = TaskSerializer()
+    task = TaskSerializer(many=True)
 
     class Meta:
         model = Time_task
