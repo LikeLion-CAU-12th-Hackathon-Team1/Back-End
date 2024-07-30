@@ -4,7 +4,7 @@ from rest_framework.fields import ReadOnlyField
 import boto3
 from uuid import uuid4
 from django.core.files.base import ContentFile
-from .models import Sigg
+from .models import Sigg, Sido
 from PIL import Image
 from io import BytesIO
 from config.settings import AWS_STORAGE_BUCKET_NAME, AWS_S3_CUSTOM_DOMAIN, AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
@@ -59,3 +59,15 @@ class PlaceCreateSerializer(serializers.ModelSerializer):
             ExtraArgs={'ContentType': 'image/jpeg'}
         )
         return f'https://{AWS_S3_CUSTOM_DOMAIN}/media/{file_name}'
+
+class ListSidoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Sido
+        fields = '__all__'
+
+class ListSiggSerializer(serializers.ModelSerializer):
+    sido = serializers.PrimaryKeyRelatedField(queryset=Sido.objects.all())
+
+    class Meta:
+        model = Sigg
+        fields = '__all__'

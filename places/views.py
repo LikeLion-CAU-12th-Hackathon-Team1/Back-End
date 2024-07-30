@@ -5,6 +5,9 @@ from .response_serializers import ListPlaceSerializer
 from rest_framework.response import Response
 from rest_framework import status
 from .models import Place
+from .models import Sido, Sigg
+from .request_serializers import ListSidoSerializer, ListSiggSerializer
+from rest_framework.generics import ListCreateAPIView
 
 class ListCreatePlace(views.APIView):
     serializer_class = PlaceCreateSerializer
@@ -44,3 +47,11 @@ class CategoryPlace(views.APIView):
         place = Place.objects.get(pk=pk)
         place.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+class SidoListCreateAPIView(ListCreateAPIView):
+    queryset = Sido.objects.all()
+    serializer_class = ListSidoSerializer
+
+class SiggListCreateAPIView(ListCreateAPIView):
+    queryset = Sigg.objects.all()
+    serializer_class = ListSiggSerializer

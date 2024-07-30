@@ -1,37 +1,77 @@
 from rest_framework import serializers
+from rest_framework.serializers import PrimaryKeyRelatedField
+from rest_framework.fields import ReadOnlyField
 from .models import *
 
+# workation-space 중간 테이블.
 class WorkationSpaceSerializer(serializers.ModelSerializer):
+    space = PrimaryKeyRelatedField(queryset=Space.objects.all())
+    workation = ReadOnlyField(source='workation_id')
 
     class Meta:
-        model = Workation_space_type
-        read_only_fields = ('space_id',)
-        fields = ('space_type',)
+        model = Workation_space
+        fields = '__all__'
+        depth = 1
+
+    def save(self, **kwargs):
+        super().save(**kwargs)
+        serializer = WorkationSpaceSerializer(data=self.data)
     
+# workation-rest 중간 테이블.
 class WorkationRestSerializer(serializers.ModelSerializer):
+    rest = PrimaryKeyRelatedField(queryset=Rest.objects.all())
+    workation = ReadOnlyField(source='workation_id')
 
     class Meta:
-        model = Workation_rest_type
-        read_only_fields = ('rest_id',)
-        fields = ('rest_type',)
+        model = Workation_rest
+        fields = '__all__'
+        depth = 1
 
-## 등록
+# 전체 workation.
 class WorkationSerializer(serializers.ModelSerializer):
-    space = WorkationSpaceSerializer(many=True)
-    rest = WorkationRestSerializer(many=True)
+    user = PrimaryKeyRelatedField(queryset=User.objects.all())
+    sigg = PrimaryKeyRelatedField(queryset=Sigg.objects.all())
+
+    workation2space = WorkationSpaceSerializer(many=True, required=False)
+    workation2rest = WorkationRestSerializer(many=True, required=False)
 
     class Meta:
         model = Workation
-        read_only_fields = ('workation_id', 'space_id', 'rest_id',)
-        fields = ('id', 'sigg_id', 'start_date', 'end_date', 'work', 'balance', 'space', 'rest', 'start_sleep', 'end_sleep',)
+        fields = '__all__'
+
+    def create(self, validated_data):
+        spaces_data = validated_data.pop('workation2space', [])
+        rest_data = validated_data.pop('workation2rest', [])
+
+        workation = Workation.objects.create(**validated_data)
+
+        for space_data in spaces_data:
+            Workation_space.objects.create(workation=workation, **space_data)
+
+        for rest_data in rest_data:
+            Workation_rest.objects.create(workation=workation, **rest_data)
+
+        return workation
+        
     
-# 워케이션 오늘 일정
-## 시간표
+# 1일 단위 워케이션.
+class DailyWorkationSerializer(serializers.ModelSerializer):
+    workation = PrimaryKeyRelatedField(queryset=Workation.objects.all())
+
+    class Meta:
+        model = Daily_workation
+        fields = '__all__'
+
+
+# 할 일.
 class TaskSerializer(serializers.ModelSerializer):
+    daily_workation = PrimaryKeyRelatedField(queryset=Daily_workation.objects.all())
+
     class Meta:
         model = Task
-        fields = ('description', 'complete',)
+        fields = '__all__'
 
+# 시간 단위 워케이션-할 일 중간 테이블.
 class TimeTaskSerializer(serializers.ModelSerializer):
     task = TaskSerializer()
 
@@ -40,28 +80,29 @@ class TimeTaskSerializer(serializers.ModelSerializer):
         read_only_fields = ('time_workation_id', 'task_id')
         fields = ('task',)
 
+# 시간 단위 워케이션.
 class TimeWorkationSerializer(serializers.ModelSerializer):
-    timetask = TimeTaskSerializer() # many=True
+    daily_workation = PrimaryKeyRelatedField(queryset=Daily_workation.objects.all())
 
     class Meta:
         model = Time_workation
-        fields = ('start_time', 'end_time', 'sort' ,'timetask',)
+        fields = '__all__'
 
-class DailyWorkationSerializer(serializers.ModelSerializer):
-    timeworkation = TimeWorkationSerializer() # many=True
-
-    class Meta:
-        model = Daily_workation
-        read_only_fields = ('workation_id', 'daily_workation_id', 'date', )
-        fields = ('timeworkation', 'memo',) # '__all__' # ('Workation_id', 'date', 'timetask', 'task', 'memo')
-
-
-# 워케이션 전체 일정
-class WorkationScheduleSerializer(serializers.ModelSerializer):
-    daily = DailyWorkationSerializer() # many=True
+class TimeTaskSerializer(serializers.ModelSerializer):
+    task = PrimaryKeyRelatedField(queryset=Task.objects.all())
+    time_workation = PrimaryKeyRelatedField(queryset=Time_workation.objects.all())
 
     class Meta:
-        model = Workation
-        read_only_fields = ('id', 'sigg_id', 'start_date', 'end_date', 'work', 'space', )
-        exclude = ('start_sleep', 'end_sleep', )
-        # fields = '__all__'
+        model = Time_task
+        fields = '__all__'
+        depth = 1
+
+    # 같은 daily_workation에 속한 객체만 연결 가능.
+    def validate(self, data):
+        task = data.get('task')
+        time_workation = data.get('time_workation')
+
+        if task.daily_workation != time_workation.daily_workation:
+            raise serializers.ValidationError("Task and Time_workation must be related to the same Daily_workation.")
+        
+        return data
