@@ -9,10 +9,11 @@ class CreateTimeTable():
     def __init__(self):
         self.client = OpenAI(api_key=OPEN_AI_API_KEY)
 
-    def create_time_table(self, bedtime, work_start_time, total_work_hours, total_rest_hours):
+    def create_time_table(self, sleep_start_time, sleep_end_time, work_start_time, total_work_hours, total_rest_hours):
         prompt = f"""
         You are a time management expert. Based on the following inputs:
-        Bedtime: {bedtime}
+        Sleep start time: {sleep_start_time}
+        Sleep end time: {sleep_end_time}
         Work start time: {work_start_time}
         Total work hours: {total_work_hours}
         Total rest hours: {total_rest_hours}
@@ -28,22 +29,11 @@ class CreateTimeTable():
         Both start_time and end_time must be in HH:00 format.
         Do not response with start_time and end_time as null values.
         Do not take into account the general patterns of life in real life; base the schedule solely on the input data.
-
-        Example Input:
-        - Bedtime: 24:00
-        - Total work hours: 8
-        - Total rest hours: 8
-        - Start time: 08:00
-
-        Example Output:
-        - 08:00-09:00 Work
-        - 09:00-10:00 Rest
-        - 10:00-11:00 Work
-        - ...
-        - 24:00-08:00 Sleeping
+        Do not have to fill the whole time.
+        The schedule can be empty between different periods.
 
         Make a schedule that satisfies the input dataset.
-        The result schedule is from 00:00 to 24:00.
+        The result schedule is from 000000 to 240000.
         Example:
         - 05:00-13:00 Sleeping
         - 13:00-14:00 Work
@@ -58,35 +48,36 @@ class CreateTimeTable():
         ...
         22:00-24:00 Rest
 
-        Provide the schedule in JSON format with the following structure:
+        Example Input:
+        - Sleep start time: 2400
+        - Sleep end time: 0600
+        - Start time: 0800
+        - Total work hours: 8
+        - Total rest hours: 8
+
+        Output Format: JSON, sort = (1: Work, 2: Rest)
+        Return a list of objects with the following
+        Example Output:
+        "schedule": 
         [
-            {{
-                "work_start_time": "HH:00",
-                "work_end_time": "HH:00"
-            }},
-            {{
-                "rest_start_time": "HH:00",
-                "rest_end_time": "HH:00"
-            }},
-            {{
-                "rest_start_time": "HH:00",
-                "rest_end_time": "HH:00"
-            }}
+            {{ "sort": 1, "start_time": 80000, "end_time": 110000 }},
+            {{ "sort": 2, "start_time": 110000, "end_time": 140000 }},
+            {{ "sort": 1, "start_time": 140000, "end_time": 17000 }},
             ...
+            {{ "sort": 2, "start_time": 230000, "end_time": 240000 }}
         ]
         """
 
         response = self.client.chat.completions.create(
+            model = "gpt-4o",
+            response_format={ "type": "json_object" },
             messages=[
                 {"role": "system", "content": prompt},
-                {"role": "user", "content": f" {bedtime} {work_start_time} {total_work_hours} {total_rest_hours}"},
+                {"role": "user", "content": f" {sleep_start_time} {sleep_end_time} {work_start_time} {total_work_hours} {total_rest_hours}"},
             ],
-            model = "gpt-4o",
         )
 
-        print(response.choices[0])
-        return response.choices[0]
-
-
-ctt = CreateTimeTable()
-ctt.create_time_table("08:00", "16:00", 6, 10)
+        response_msg = response.choices[0].message.content
+        data = json.loads(response_msg)
+        schedule_list = data['schedule']
+        return schedule_list

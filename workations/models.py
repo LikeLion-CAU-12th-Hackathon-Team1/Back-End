@@ -36,11 +36,11 @@ class Workation(models.Model):
     end_date = models.BigIntegerField()
     start_sleep = models.IntegerField(default=0000)
     end_sleep = models.IntegerField(default=2359)
-    work = models.IntegerField(
+    work_style = models.IntegerField(
         choices = Workation_work.choices,
         default = Workation_work.mid,
     )
-    balance = models.IntegerField(
+    work_purpose = models.IntegerField(
         choices = Workation_balance.choices,
         default = Workation_balance.balance,
     )

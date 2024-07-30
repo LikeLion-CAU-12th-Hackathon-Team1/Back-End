@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from rest_framework.serializers import PrimaryKeyRelatedField
-from rest_framework.fields import ReadOnlyField
+from rest_framework.fields import ReadOnlyField, JSONField
 from .models import *
 from time_table import CreateTimeTable
 
@@ -16,7 +16,7 @@ class WorkationSpaceSerializer(serializers.ModelSerializer):
 
     def save(self, **kwargs):
         super().save(**kwargs)
-        serializer = WorkationSpaceSerializer(data=self.data)
+        serializer = WorkationSpaceSerializer(validated_data=self.validated_data)
     
 # workation-rest 중간 테이블.
 class WorkationRestSerializer(serializers.ModelSerializer):
@@ -52,12 +52,25 @@ class WorkationSerializer(serializers.ModelSerializer):
         for rest_data in rest_data:
             Workation_rest.objects.create(workation=workation, **rest_data)
 
-        serializer = DailyWorkationSerializer(data={'workation': workation.workation_id})
-        if serializer.is_valid():
-            i = 0
-            while validated_data['start_date'] + i <= validated_data['end_date']:
+        time_table_creator = CreateTimeTable()
+        base_time_table = time_table_creator.create_time_table(
+            validated_data['start_sleep'], 
+            validated_data['end_sleep'], 
+            8, 6, 10)
+
+        current_date = validated_data['start_date']
+        end_date = validated_data['end_date']
+        while current_date <= end_date:
+            serializer = DailyWorkationSerializer(
+                data = {
+                    'workation': workation.workation_id,
+                    'date': current_date,
+                    'base_time_table': base_time_table
+                    }
+                )
+            if serializer.is_valid():
                 serializer.save()
-                i += 1
+            current_date += 1
 
         return workation
         
@@ -65,10 +78,26 @@ class WorkationSerializer(serializers.ModelSerializer):
 # 1일 단위 워케이션.
 class DailyWorkationSerializer(serializers.ModelSerializer):
     workation = PrimaryKeyRelatedField(queryset=Workation.objects.all())
+    base_time_table = JSONField(required=False)
 
     class Meta:
         model = Daily_workation
         fields = '__all__'
+
+    def create(self, validated_data):
+        workation = validated_data.pop('workation')
+        base_time_table = validated_data.pop('base_time_table')
+        daily_workation = Daily_workation.objects.create(workation=workation, **validated_data)
+
+        for time_data in base_time_table:
+            time_data['daily_workation'] = daily_workation.daily_workation_id
+            serializer = TimeWorkationSerializer(data = time_data)
+            if serializer.is_valid():
+                serializer.save()
+            else:
+                raise serializers.ValidationError("Invalid time data.")
+
+        return daily_workation
 
 
 # 할 일.
@@ -91,6 +120,9 @@ class TimeTaskSerializer(serializers.ModelSerializer):
 # 시간 단위 워케이션.
 class TimeWorkationSerializer(serializers.ModelSerializer):
     daily_workation = PrimaryKeyRelatedField(queryset=Daily_workation.objects.all())
+    sort = serializers.IntegerField(required=True)
+    start_time = serializers.IntegerField(required=True)
+    end_time = serializers.IntegerField(required=True)
 
     class Meta:
         model = Time_workation
@@ -106,11 +138,11 @@ class TimeTaskSerializer(serializers.ModelSerializer):
         depth = 1
 
     # 같은 daily_workation에 속한 객체만 연결 가능.
-    def validate(self, data):
-        task = data.get('task')
-        time_workation = data.get('time_workation')
+    def validate(self, validated_data):
+        task = validated_data.get('task')
+        time_workation = validated_data.get('time_workation')
 
         if task.daily_workation != time_workation.daily_workation:
             raise serializers.ValidationError("Task and Time_workation must be related to the same Daily_workation.")
         
-        return data
+        return validated_data
