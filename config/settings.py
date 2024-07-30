@@ -139,7 +139,7 @@ DATABASES = {
         'PASSWORD': DB_PASSWORD,
         # 'HOST' : '127.0.0.1',
         # 'PORT' : '13306',
-		  'HOST': DB_HOST,
+	    'HOST': DB_HOST,
 	    'PORT': '3306', # default mysql portnumber
         'OPTIONS': {
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
