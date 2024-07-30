@@ -2,6 +2,7 @@ from rest_framework import serializers
 from rest_framework.serializers import PrimaryKeyRelatedField
 from rest_framework.fields import ReadOnlyField
 from .models import *
+from time_table import CreateTimeTable
 
 # workation-space 중간 테이블.
 class WorkationSpaceSerializer(serializers.ModelSerializer):
@@ -50,6 +51,13 @@ class WorkationSerializer(serializers.ModelSerializer):
 
         for rest_data in rest_data:
             Workation_rest.objects.create(workation=workation, **rest_data)
+
+        serializer = DailyWorkationSerializer(data={'workation': workation.workation_id})
+        if serializer.is_valid():
+            i = 0
+            while validated_data['start_date'] + i <= validated_data['end_date']:
+                serializer.save()
+                i += 1
 
         return workation
         
