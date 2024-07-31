@@ -8,6 +8,7 @@ from .models import Place
 from .models import Sido, Sigg
 from .request_serializers import ListSidoSerializer, ListSiggSerializer
 from rest_framework.generics import ListCreateAPIView
+from rest_framework.permissions import AllowAny
 
 class ListCreatePlace(views.APIView):
     serializer_class = PlaceCreateSerializer
@@ -26,6 +27,7 @@ class ListCreatePlace(views.APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class CategoryPlace(views.APIView):
+    permission_classes = [AllowAny]
     serializer_class = ListPlaceSerializer
     queryset = Place.objects.all()
 
