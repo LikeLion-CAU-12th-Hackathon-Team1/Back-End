@@ -129,21 +129,21 @@ WSGI_APPLICATION = "config.wsgi.application"
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 DATABASES = {
-    # "default": {
-    #     "ENGINE": "django.db.backends.sqlite3",
-    #     "NAME": BASE_DIR / "db.sqlite3",
-    "default" : {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': DB_NAME,
-        'USER': DB_USERNAME, # root로 접속하여 DB를 만들었다면 'root'
-        'PASSWORD': DB_PASSWORD,
-        # 'HOST' : '127.0.0.1',
-        # 'PORT' : '13306',
-	    'HOST': DB_HOST,
-	    'PORT': '3306', # default mysql portnumber
-        'OPTIONS': {
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
-        }
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
+    # "default" : {
+    #     'ENGINE': 'django.db.backends.mysql',
+    #     'NAME': DB_NAME,
+    #     'USER': DB_USERNAME, # root로 접속하여 DB를 만들었다면 'root'
+    #     'PASSWORD': DB_PASSWORD,
+    #     # 'HOST' : '127.0.0.1',
+    #     # 'PORT' : '13306',
+	#     'HOST': DB_HOST,
+	#     'PORT': '3306', # default mysql portnumber
+    #     'OPTIONS': {
+    #         'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
+    #     }
     }
 }
 
@@ -208,9 +208,9 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     # JWT 토큰을 사용해서 인증을 하기 위해 설정
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
-    ],
+    # 'DEFAULT_PERMISSION_CLASSES': [
+    #     'rest_framework.permissions.IsAuthenticated',
+    # ],
 }
 
 REST_USE_JWT = True

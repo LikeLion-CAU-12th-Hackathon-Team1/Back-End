@@ -20,6 +20,11 @@ class TimeWorkationGenericAPIView(generics.ListCreateAPIView):
     queryset = Time_workation.objects.all()
     serializer_class = TimeWorkationSerializer
 
+class TimeWorkationEditGenericAPIView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Time_workation.objects.all()
+    serializer_class = TimeWorkationSerializer
+    # lookup_field = 'time_workation_id'
+
 class TaskGenericAPIView(generics.ListCreateAPIView):
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
@@ -27,6 +32,7 @@ class TaskGenericAPIView(generics.ListCreateAPIView):
 class TimeTaskGenericAPIView(generics.ListCreateAPIView):
     queryset = Time_task.objects.all()
     serializer_class = TimeTaskSerializer
+
 
 # class WorkationScheduleGenericAPIView(generics.ListCreateAPIView):
 #     queryset = Workation.objects.all()
