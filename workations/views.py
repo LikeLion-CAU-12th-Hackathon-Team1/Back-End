@@ -38,6 +38,12 @@ class DailyWorkationGenericAPIView(generics.ListCreateAPIView):
     queryset = Daily_workation.objects.all()
     serializer_class = DailyWorkationSerializer
 
+
+class DailyWorkationBalanceGenericAPIView(generics.RetrieveAPIView):
+    queryset = Daily_workation.objects.all()
+    serializer_class = DailyWorkationBalanceSerializer
+    lookup_field = 'daily_workation_id'
+
 class TimeWorkationGenericAPIView(generics.ListCreateAPIView):
     queryset = Time_workation.objects.all()
     serializer_class = TimeWorkationSerializer
@@ -45,6 +51,23 @@ class TimeWorkationGenericAPIView(generics.ListCreateAPIView):
     def get(self, request, daily_workation_id):
         time_workations = Time_workation.objects.filter(daily_workation=daily_workation_id)
         serializer = TimeWorkationSerializer(time_workations, many=True)
+        return Response(serializer.data)
+
+    # def post(self, request, *args, **kwargs):
+    #     serializer = TimeWorkationSerializer(data=request.data)
+    #     if not serializer.is_valid():
+    #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        daily_workation_id = self.request.query_params.get('daily_workation_id', None)
+        if daily_workation_id is not None:
+            queryset = queryset.filter(daily_workation_id=daily_workation_id)
+        return queryset
+    
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
 class TaskGenericAPIView(generics.ListCreateAPIView):
@@ -152,3 +175,11 @@ class DailyWorkationTaskList(generics.ListCreateAPIView):
         tasks = Task.objects.filter(daily_workation=daily_workation_id)
         serializer = TaskSerializer(tasks, many=True)
         return Response(serializer.data)
+    
+class TasksByTimeWorkationView(generics.ListAPIView):
+    serializer_class = TaskSerializer
+
+    def get_queryset(self):
+        time_workation_id = self.kwargs['time_workation_id']
+        # Get all tasks related to the Time_workation with the given ID
+        return Task.objects.filter(time_task__time_workation_id=time_workation_id)

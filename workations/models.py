@@ -59,6 +59,8 @@ class Workation_rest(models.Model):
     rest = models.ForeignKey(Rest, on_delete=models.CASCADE)
 
 
+from datetime import datetime
+
 # 데일리
 class Daily_workation(models.Model):
     daily_workation_id = models.AutoField(primary_key=True)
@@ -69,6 +71,22 @@ class Daily_workation(models.Model):
     @property
     def owner(self):
         return self.workation.user
+
+    def total_duration_for_type(self, time_type):
+        total_duration = 0
+        time_workations = Time_workation.objects.filter(daily_workation=self, sort=time_type)
+        for time_workation in time_workations:
+            duration = datetime.combine(datetime.today(), time_workation.end_time) - datetime.combine(datetime.today(), time_workation.start_time)
+            total_duration += duration.total_seconds() / 60  # convert seconds to minutes
+        return total_duration
+
+    def calculate_rest_ratio(self):
+        total_rest_time = self.total_duration_for_type(Time_workation_sort.rest)
+        total_work_time = self.total_duration_for_type(Time_workation_sort.work)
+        total_time = total_rest_time + total_work_time
+        if total_time == 0:
+            return 0
+        return total_rest_time / total_time
 
 # 시간별
 class Time_workation_sort(models.IntegerChoices):

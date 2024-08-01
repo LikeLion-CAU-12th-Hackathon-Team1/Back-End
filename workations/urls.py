@@ -18,4 +18,5 @@ urlpatterns = [
     path('daily/<int:daily_workation_id>/todolist/', DailyWorkationTaskList.as_view(), name='daily_workation_todo_list'),
     path('rest/', WorkationRest.as_view(), name='sido_list_create'),
     path('space/', WorkationSpace.as_view(), name='sigg_list_create'),
+    path('daily/<int:daily_workation_id>/balance/', DailyWorkationBalanceGenericAPIView.as_view()),
 ]
