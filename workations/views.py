@@ -50,8 +50,12 @@ class TimeWorkationGenericAPIView(generics.ListCreateAPIView):
     def post(self, request, daily_workation_id):
         request.data['daily_workation'] = daily_workation_id
         time = request.data.get('start_time', None)
+        if time is None:
+            return Response(data='start_time is required', status=status.HTTP_400_BAD_REQUEST)
         request.data['start_time'] = dt.time(int(time[0:2]), int(time[2:4]), int(time[4:6]))
         time = request.data.get('end_time', None)
+        if time is None:
+            return Response(data='end_time is required', status=status.HTTP_400_BAD_REQUEST)
         request.data['end_time'] = dt.time(int(time[0:2]), int(time[2:4]), int(time[4:6]))
         serializer = TimeWorkationSerializer(data=request.data)
         if serializer.is_valid():
@@ -108,6 +112,7 @@ class RetrieveUpdateDestroyTimeWorkation(generics.RetrieveUpdateDestroyAPIView):
     lookup_field = 'time_workation_id'
 
     def patch(self, request, time_workation_id):
+        request.data['time_workation_id'] = time_workation_id
         start_time = request.data.get('start_time', None)
         if start_time:
             request.data['start_time'] = dt.time(int(start_time[0:2]), int(start_time[2:4]), int(start_time[4:6]))

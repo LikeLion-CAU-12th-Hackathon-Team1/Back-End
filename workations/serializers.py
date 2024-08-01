@@ -218,21 +218,23 @@ class TimeWorkationSerializer(serializers.ModelSerializer):
     def validate_start_time(self, value):
         times = Time_workation.objects.filter(daily_workation=self.initial_data['daily_workation'])
         for time in times:
-            if time.start_time <= value <= time.end_time:
-                raise serializers.ValidationError("Time overlaps with existing time.")
+            if time.start_time < value < time.end_time:
+                raise serializers.ValidationError("Start time overlaps with existing time.")
         return value
     
     def validate_end_time(self, value):
         times = Time_workation.objects.filter(daily_workation=self.initial_data['daily_workation'])
         for time in times:
-            if time.start_time <= value <= time.end_time:
-                raise serializers.ValidationError("Time overlaps with existing time.")
+            if time.start_time < value < time.end_time:
+                raise serializers.ValidationError("End time overlaps with existing time.")
         return value
     
     def validate(self, validated_data):
         times = Time_workation.objects.filter(daily_workation=validated_data['daily_workation'])
         for time in times:
-            if validated_data['start_time'] <= time.start_time <= validated_data['end_time'] or validated_data['start_time'] <= time.end_time <= validated_data['end_time']:
+            if validated_data['start_time'] <= time.start_time and validated_data['end_time'] >= time.end_time:
+                raise serializers.ValidationError("Time overlaps with existing time.")
+            if time.start_time <= validated_data['start_time'] and time.end_time >= validated_data['end_time']:
                 raise serializers.ValidationError("Time overlaps with existing time.")
         return validated_data
 
