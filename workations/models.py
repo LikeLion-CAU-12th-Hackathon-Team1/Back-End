@@ -32,8 +32,8 @@ class Workation(models.Model):
     workation_id = models.AutoField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     sigg = models.ForeignKey(Sigg, on_delete=models.CASCADE)
-    start_date = models.BigIntegerField()
-    end_date = models.BigIntegerField()
+    start_date = models.DateField()
+    end_date = models.DateField()
     start_sleep = models.IntegerField(default=0000)
     end_sleep = models.IntegerField(default=2359)
     work_style = models.IntegerField(
@@ -55,12 +55,30 @@ class Workation_rest(models.Model):
     rest = models.ForeignKey(Rest, on_delete=models.CASCADE)
 
 
+from datetime import datetime
+
 # 데일리
 class Daily_workation(models.Model):
     daily_workation_id = models.AutoField(primary_key=True)
     workation = models.ForeignKey(Workation, on_delete=models.CASCADE)
-    date = models.BigIntegerField()
+    date = models.DateField()
     memo = models.TextField(blank=True)
+
+    def total_duration_for_type(self, time_type):
+        total_duration = 0
+        time_workations = Time_workation.objects.filter(daily_workation=self, sort=time_type)
+        for time_workation in time_workations:
+            duration = datetime.combine(datetime.today(), time_workation.end_time) - datetime.combine(datetime.today(), time_workation.start_time)
+            total_duration += duration.total_seconds() / 60  # convert seconds to minutes
+        return total_duration
+
+    def calculate_rest_ratio(self):
+        total_rest_time = self.total_duration_for_type(Time_workation_sort.rest)
+        total_work_time = self.total_duration_for_type(Time_workation_sort.work)
+        total_time = total_rest_time + total_work_time
+        if total_time == 0:
+            return 0
+        return total_rest_time / total_time
 
 
 # 시간별
@@ -72,9 +90,8 @@ class Time_workation(models.Model):
     time_workation_id = models.AutoField(primary_key=True)
     daily_workation = models.ForeignKey(Daily_workation, on_delete=models.CASCADE)
     sort = models.IntegerField(choices = Time_workation_sort.choices, null=False)
-    start_time = models.BigIntegerField()
-    end_time = models.BigIntegerField()
-
+    start_time = models.TimeField()
+    end_time = models.TimeField()
 
 # 할 일
 class Task_complete(models.IntegerChoices):

@@ -9,6 +9,7 @@ urlpatterns = [
     path('<int:workation_id>/', RetrieveUpdateDestroyWorkation.as_view(), name='workation_retrieve_update_destroy'),
     path('daily/', DailyWorkationGenericAPIView.as_view(), name='daily_workation_list_create'),
     path('daily/<int:daily_workation_id>/', RetrieveUpdateDestroyDailyWorkation.as_view(), name='daily_workation_retrieve_update_destroy'),
+    path('daily/<int:daily_workation_id>/balance/', DailyWorkationBalanceGenericAPIView.as_view()),
     path('daily/<int:daily_workation_id>/time/', TimeWorkationGenericAPIView.as_view(), name='time_workation_list_create'),
     path('daily/time/<int:time_workation_id>/', RetrieveUpdateDestroyTimeWorkation.as_view(), name='time_workation_retrieve_update_destroy'),
     path('daily/time/<int:time_workation_id>/task/', TaskGenericAPIView.as_view(), name='task_list_create'),

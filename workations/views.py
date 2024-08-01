@@ -32,6 +32,11 @@ class DailyWorkationGenericAPIView(generics.ListCreateAPIView):
     queryset = Daily_workation.objects.all()
     serializer_class = DailyWorkationSerializer
 
+class DailyWorkationBalanceGenericAPIView(generics.RetrieveAPIView):
+    queryset = Daily_workation.objects.all()
+    serializer_class = DailyWorkationBalanceSerializer
+    lookup_field = 'daily_workation_id'
+
 # 타임 워케이션은 사용자가 직접 CRUD 가능하기 때문에 설정해야 함.
 class TimeWorkationGenericAPIView(generics.ListCreateAPIView):
     queryset = Time_workation.objects.all()
