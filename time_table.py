@@ -60,11 +60,11 @@ class CreateTimeTable():
         Example Output:
         "schedule": 
         [
-            {{ "sort": 1, "start_time": 80000, "end_time": 110000 }},
-            {{ "sort": 2, "start_time": 110000, "end_time": 140000 }},
-            {{ "sort": 1, "start_time": 140000, "end_time": 17000 }},
+            {{ "sort": 1, "start_time": "80000", "end_time": "110000" }},
+            {{ "sort": 2, "start_time": "110000", "end_time": "140000" }},
+            {{ "sort": 1, "start_time": "140000", "end_time": "170000" }},
             ...
-            {{ "sort": 2, "start_time": 230000, "end_time": 235959 }}
+            {{ "sort": 2, "start_time": "230000", "end_time": "235959" }}
         ]
         """
 

@@ -80,6 +80,11 @@ class TimeTaskGenericAPIView(generics.ListCreateAPIView):
     queryset = Time_task.objects.all()
     serializer_class = TimeTaskSerializer
 
+    def get(self, request, time_workation_id):
+        time_tasks = Time_task.objects.filter(time_workation=time_workation_id)
+        serializer = TimeTaskSerializer(time_tasks, many=True)
+        return Response(serializer.data)
+
 class RetrieveUpdateDestroyWorkation(generics.RetrieveUpdateDestroyAPIView):
     queryset = Workation.objects.all()
     serializer_class = WorkationSerializer
