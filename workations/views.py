@@ -42,7 +42,7 @@ class DailyWorkationGenericAPIView(generics.ListCreateAPIView):
 
 class DailyWorkationBalanceGenericAPIView(generics.RetrieveAPIView):
     queryset = Daily_workation.objects.all()
-    serializer_class = DailyWorkationBalanceSerializer
+    serializer_class = DailyWorkationSerializer
     lookup_field = 'daily_workation_id'
 
 class TimeWorkationGenericAPIView(generics.ListCreateAPIView):
