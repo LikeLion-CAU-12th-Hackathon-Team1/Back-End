@@ -127,8 +127,8 @@ class DailyWorkationSerializer(serializers.ModelSerializer):
 # 할 일.
 class TaskSerializer(serializers.ModelSerializer):
     daily_workation = PrimaryKeyRelatedField(queryset=Daily_workation.objects.all(), required=False)
-    time_workation = PrimaryKeyRelatedField(queryset=Time_workation.objects.all(), required=True)
-    task = serializers.CharField(required=True)
+    time_workation = PrimaryKeyRelatedField(queryset=Time_workation.objects.all(), required=False)
+    description = serializers.CharField(required=True)
     complete = serializers.BooleanField(required=False)
 
     class Meta:
@@ -136,23 +136,24 @@ class TaskSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def create(self, validated_data):
-        time_workation = validated_data.pop('time_workation', None)
-        if time_workation is None:
-            raise serializers.ValidationError("Time_workation must be provided.")
-        super().create(validated_data)
-
-        serializer = TimeTaskSerializer(data = time_workation)
-
+        time_workation = validated_data.pop('time_workation')
+        validated_data['daily_workation'] = time_workation.daily_workation
+        task = super().create(validated_data)
+        time_task_data = {
+            'task': task.task_id,
+            'time_workation': time_workation.time_workation_id
+        }
+        serializer = TimeTaskSerializer(data=time_task_data)
+        if serializer.is_valid():
+            serializer.save()
+        return task
+    
+    def to_representation(self, instance):
+        if instance.complete == 2:
+            instance.complete = False
+        return super().to_representation(instance)
 
 # 시간 단위 워케이션-할 일 중간 테이블.
-# class TimeTaskSerializer(serializers.ModelSerializer):
-#     task = TaskSerializer(many=True)
-
-#     class Meta:
-#         model = Time_task
-#         read_only_fields = ('time_workation_id', 'task_id')
-#         fields = ('task',)
-
 class TimeTaskSerializer(serializers.ModelSerializer):
     task = PrimaryKeyRelatedField(queryset=Task.objects.all())
     time_workation = PrimaryKeyRelatedField(queryset=Time_workation.objects.all())

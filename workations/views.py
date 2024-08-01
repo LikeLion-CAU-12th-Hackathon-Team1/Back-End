@@ -7,7 +7,7 @@ from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-from config.permissions import IsOwnerOrReadOnly
+from config.permissions import IsOwner
 from datetime import datetime
 import datetime as dt
 from datetime import date
@@ -50,13 +50,21 @@ class TimeWorkationGenericAPIView(generics.ListCreateAPIView):
 class TaskGenericAPIView(generics.ListCreateAPIView):
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
+    permission_classes = [IsOwner]
+
+    def post(self, request, time_workation_id):
+        request.data['time_workation'] = time_workation_id
+        serializer = TaskSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class TimeTaskGenericAPIView(generics.ListCreateAPIView):
     queryset = Time_task.objects.all()
     serializer_class = TimeTaskSerializer
 
 class RetrieveUpdateDestroyWorkation(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
     queryset = Workation.objects.all()
     serializer_class = WorkationSerializer
     lookup_field = 'workation_id'
@@ -83,16 +91,36 @@ class RetrieveUpdateDestroyDailyWorkation(generics.RetrieveUpdateDestroyAPIView)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class RetrieveUpdateDestroyTimeWorkation(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
     queryset = Time_workation.objects.all()
     serializer_class = TimeWorkationSerializer
     lookup_field = 'time_workation_id'
 
+    def patch(self, request, time_workation_id):
+        start_time = request.data.get('start_time', None)
+        if start_time:
+            request.data['start_time'] = dt.time(int(start_time[0:2]), int(start_time[2:4]), int(start_time[4:6]))
+        end_time = request.data.get('end_time', None)
+        if end_time:
+            request.data['end_time'] = dt.time(int(end_time[0:2]), int(end_time[2:4]), int(end_time[4:6]))
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 class RetrieveUpdateDestroyTask(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
     lookup_field = 'task_id'
+
+    def patch(self, request, task_id):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class TodayDailyWorkation(generics.ListAPIView):
     queryset = Daily_workation.objects.all()
@@ -115,3 +143,12 @@ class WorkationRest(generics.ListCreateAPIView):
 class WorkationSpace(generics.ListCreateAPIView):
     queryset = Workation_space.objects.all()
     serializer_class = SpaceSerializer
+
+class DailyWorkationTaskList(generics.ListCreateAPIView):
+    queryset = Task.objects.all()
+    serializer_class = TaskSerializer
+
+    def get(self, request, daily_workation_id):
+        tasks = Task.objects.filter(daily_workation=daily_workation_id)
+        serializer = TaskSerializer(tasks, many=True)
+        return Response(serializer.data)
