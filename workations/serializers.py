@@ -98,6 +98,18 @@ class DailyWorkationSerializer(serializers.ModelSerializer):
 
         for time_data in base_time_table:
             time_data['daily_workation'] = daily_workation.daily_workation_id
+            time_data['start_time'] = int(time_data['start_time'])
+            time_data['end_time'] = int(time_data['end_time'])
+
+            hours = time_data['start_time'] // 10000
+            minutes = (time_data['start_time'] % 10000) // 100
+            seconds = time_data['start_time'] % 100
+            time_data['start_time'] = datetime.time(hours, minutes, seconds)
+            hours = time_data['end_time'] // 10000
+            minutes = (time_data['end_time'] % 10000) // 100
+            seconds = time_data['end_time'] % 100
+            time_data['end_time'] = datetime.time(hours, minutes, seconds)
+
             serializer = TimeWorkationSerializer(data = time_data)
             if serializer.is_valid():
                 serializer.save()
@@ -179,14 +191,15 @@ class TimeWorkationSerializer(serializers.ModelSerializer):
         return queryset
     
     def create(self, validated_data):
-        hours = validated_data['start_time'] // 10000
-        minutes = (validated_data['start_time'] % 10000) // 100
-        seconds = validated_data['start_time'] % 100
-        validated_data['start_time'] = datetime.time(hours, minutes, seconds)
-        hours = validated_data['end_time'] // 10000
-        minutes = (validated_data['end_time'] % 10000) // 100
-        seconds = validated_data['end_time'] % 100
-        validated_data['end_time'] = datetime.time(hours, minutes, seconds)
+        if type(validated_data['start_time']) != datetime.time:
+            hours = validated_data['start_time'] // 10000
+            minutes = (validated_data['start_time'] % 10000) // 100
+            seconds = validated_data['start_time'] % 100
+            validated_data['start_time'] = datetime.time(hours, minutes, seconds)
+            hours = validated_data['end_time'] // 10000
+            minutes = (validated_data['end_time'] % 10000) // 100
+            seconds = validated_data['end_time'] % 100
+            validated_data['end_time'] = datetime.time(hours, minutes, seconds)
         return super().create(validated_data)
 
     def update(self, instance, validated_data):

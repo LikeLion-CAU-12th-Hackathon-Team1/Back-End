@@ -46,7 +46,7 @@ class CreateTimeTable():
         - 05:00-13:00 Sleeping
         - 13:00-14:00 Work
         ...
-        22:00-24:00 Rest
+        - 22:00-23:59 Rest
 
         Example Input:
         - Sleep start time: 2400
@@ -64,7 +64,7 @@ class CreateTimeTable():
             {{ "sort": 2, "start_time": 110000, "end_time": 140000 }},
             {{ "sort": 1, "start_time": 140000, "end_time": 17000 }},
             ...
-            {{ "sort": 2, "start_time": 230000, "end_time": 240000 }}
+            {{ "sort": 2, "start_time": 230000, "end_time": 235959 }}
         ]
         """
 
