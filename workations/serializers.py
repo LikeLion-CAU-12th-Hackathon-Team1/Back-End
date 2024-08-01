@@ -6,6 +6,7 @@ from time_table import CreateTimeTable
 from config.permissions import IsAuthenticatedAndReturnUser
 from rest_framework.response import Response
 
+import datetime
 
 # workation-space 중간 테이블.
 class WorkationSpaceSerializer(serializers.ModelSerializer):
@@ -187,6 +188,70 @@ class TimeWorkationSerializer(serializers.ModelSerializer):
             queryset = queryset.filter(daily_workation_id=daily_workation_id)
         return queryset
 
+    
+    def create(self, validated_data):
+        if type(validated_data['start_time']) != datetime.time:
+            hours = validated_data['start_time'] // 10000
+            minutes = (validated_data['start_time'] % 10000) // 100
+            seconds = validated_data['start_time'] % 100
+            validated_data['start_time'] = datetime.time(hours, minutes, seconds)
+            hours = validated_data['end_time'] // 10000
+            minutes = (validated_data['end_time'] % 10000) // 100
+            seconds = validated_data['end_time'] % 100
+            validated_data['end_time'] = datetime.time(hours, minutes, seconds)
+        return super().create(validated_data)
+
+    def validate(self, data):
+        daily_workation = data['daily_workation']
+        sort = data['sort']
+        start_time = data['start_time']
+        end_time = data['end_time']
+
+        # 기존 시간표 가져오기
+        existing_timeworks = Time_workation.objects.filter(daily_workation=daily_workation)
+
+        # 1시간 단위로 시간 리스트 생성
+        new_reservation_times = [start_time + i * 3600 for i in range((end_time - start_time) // 3600)]
+
+        for timework in existing_timeworks:
+            existing_times = [timework.start_time + i * 3600 for i in range((timework.end_time - timework.start_time) // 3600)]
+            # 시간이 겹치는지 확인
+            if set(new_reservation_times) & set(existing_times):
+                raise serializers.ValidationError(f"{'작업' if sort == Time_workation_sort.work else '휴식'} 시간이 겹칩니다.")
+
+        return data
+
     def update(self, instance, validated_data):
         validated_data.pop('daily_workation', None)
         return super().update(instance, validated_data)
+
+    
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['start_time'] = instance.start_time.strftime('%H%M%S')
+        representation['end_time'] = instance.end_time.strftime('%H%M%S')
+        return representation
+
+class TodayWorkationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Daily_workation
+        fields = '__all__'
+
+class SpaceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Space
+        fields = '__all__'
+
+class RestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Rest
+        fields = '__all__'
+
+    def get_tasks(self, obj):
+        # Get all Time_task entries for this time_workation
+        time_tasks = obj.timetask_set.all()
+        # Extract the task ids from the time_tasks
+        task_ids = time_tasks.values_list('task_id', flat=True)
+        # Get the tasks
+        tasks = Task.objects.filter(task_id__in=task_ids)
+        return TaskSerializer(tasks, many=True).data

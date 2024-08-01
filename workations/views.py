@@ -39,6 +39,12 @@ class DailyWorkationGenericAPIView(generics.ListCreateAPIView):
     serializer_class = DailyWorkationSerializer
 
 # 타임 워케이션은 사용자가 직접 CRUD 가능하기 때문에 설정해야 함.
+
+class DailyWorkationBalanceGenericAPIView(generics.RetrieveAPIView):
+    queryset = Daily_workation.objects.all()
+    serializer_class = DailyWorkationBalanceSerializer
+    lookup_field = 'daily_workation_id'
+
 class TimeWorkationGenericAPIView(generics.ListCreateAPIView):
     queryset = Time_workation.objects.all()
     serializer_class = TimeWorkationSerializer
@@ -171,12 +177,12 @@ class DailyWorkationTaskList(generics.ListCreateAPIView):
         serializer = TaskSerializer(tasks, many=True)
         return Response(serializer.data)
 
+
 # 추가
 # class RetrieveUpateDestroyTimeTaks(generics.RetrieveUpdateDestroyAPIView):
 #     queryset = Time_workation.objects.all()
 #     serializer_class = TimeWorkationSerializer
 #     lookup_field = 'time_workation_id'
-
 
 class TasksByTimeWorkationView(generics.ListAPIView):
     serializer_class = TaskSerializer
@@ -184,4 +190,5 @@ class TasksByTimeWorkationView(generics.ListAPIView):
     def get_queryset(self):
         time_workation_id = self.kwargs['time_workation_id']
         # Get all tasks related to the Time_workation with the given ID
+
         return Task.objects.filter(time_task__time_workation_id=time_workation_id)

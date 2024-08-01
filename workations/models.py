@@ -68,6 +68,10 @@ class Daily_workation(models.Model):
     date = models.DateField()
     memo = models.TextField(blank=True)
 
+    @property
+    def owner(self):
+        return self.workation.user
+
     def total_duration_for_type(self, time_type):
         total_duration = 0
         time_workations = Time_workation.objects.filter(daily_workation=self, sort=time_type)
