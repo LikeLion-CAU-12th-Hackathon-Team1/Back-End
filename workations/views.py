@@ -192,7 +192,11 @@ def work_rest_graph(request, daily_workation_id):
             work_time += end - start
         else:
             rest_time += end - start
-
+    if work_time + rest_time == 0:
+        return JsonResponse({
+            'raio' : 0,
+            'status' : 200
+        })
     return JsonResponse({
         'raio' : rest_time / (work_time + rest_time) * 100,
         'status' : 200 
