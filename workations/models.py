@@ -45,6 +45,10 @@ class Workation(models.Model):
         default = Workation_balance.balance,
     )
 
+    @property
+    def owner(self):
+        return self.user
+
 class Workation_space(models.Model):
     workation = models.ForeignKey(Workation, on_delete=models.CASCADE)
     space = models.ForeignKey(Space, on_delete=models.CASCADE)
@@ -80,6 +84,10 @@ class Daily_workation(models.Model):
             return 0
         return total_rest_time / total_time
 
+    @property
+    def owner(self):
+        return self.workation.user
+
 
 # 시간별
 class Time_workation_sort(models.IntegerChoices):
@@ -92,6 +100,10 @@ class Time_workation(models.Model):
     sort = models.IntegerField(choices = Time_workation_sort.choices, null=False)
     start_time = models.TimeField()
     end_time = models.TimeField()
+
+    @property
+    def owner(self):
+        return self.daily_workation.workation.user
 
 # 할 일
 class Task_complete(models.IntegerChoices):
@@ -107,6 +119,9 @@ class Task(models.Model):
         default = Task_complete.N,
     )
 
+    @property
+    def owner(self):
+        return self.daily_workation.workation.user
 
 class Time_task(models.Model):
     time_workation = models.ForeignKey(Time_workation, on_delete=models.CASCADE)

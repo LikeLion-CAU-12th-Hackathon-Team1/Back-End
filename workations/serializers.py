@@ -6,8 +6,6 @@ from time_table import CreateTimeTable
 from config.permissions import IsAuthenticatedAndReturnUser
 from rest_framework.response import Response
 
-from django.core.exceptions import ValidationError
-
 
 # workation-space 중간 테이블.
 class WorkationSpaceSerializer(serializers.ModelSerializer):
@@ -31,7 +29,6 @@ class WorkationRestSerializer(serializers.ModelSerializer):
 
 # 전체 workation.
 class WorkationSerializer(serializers.ModelSerializer):
-    # user = PrimaryKeyRelatedField(queryset=User.objects.all())
     sigg = PrimaryKeyRelatedField(queryset=Sigg.objects.all())
 
     workation2space = WorkationSpaceSerializer(many=True, required=False)
@@ -72,15 +69,23 @@ class WorkationSerializer(serializers.ModelSerializer):
                 )
             if serializer.is_valid():
                 serializer.save()
-            current_date += 1
+            current_date += datetime.timedelta(days=1)
 
         return workation
+    
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        # 날짜 필드를 8자리 숫자 문자열로 변환
+        ret['start_date'] = instance.start_date.strftime('%Y%m%d')
+        ret['end_date'] = instance.end_date.strftime('%Y%m%d')
+        return ret
         
     
 # 1일 단위 워케이션.
 class DailyWorkationSerializer(serializers.ModelSerializer):
     workation = PrimaryKeyRelatedField(queryset=Workation.objects.all())
     base_time_table = JSONField(required=False)
+    memo = serializers.CharField(required=False)
 
     class Meta:
         model = Daily_workation
@@ -93,6 +98,18 @@ class DailyWorkationSerializer(serializers.ModelSerializer):
 
         for time_data in base_time_table:
             time_data['daily_workation'] = daily_workation.daily_workation_id
+            time_data['start_time'] = int(time_data['start_time'])
+            time_data['end_time'] = int(time_data['end_time'])
+
+            hours = time_data['start_time'] // 10000
+            minutes = (time_data['start_time'] % 10000) // 100
+            seconds = time_data['start_time'] % 100
+            time_data['start_time'] = datetime.time(hours, minutes, seconds)
+            hours = time_data['end_time'] // 10000
+            minutes = (time_data['end_time'] % 10000) // 100
+            seconds = time_data['end_time'] % 100
+            time_data['end_time'] = datetime.time(hours, minutes, seconds)
+
             serializer = TimeWorkationSerializer(data = time_data)
             if serializer.is_valid():
                 serializer.save()
@@ -102,23 +119,11 @@ class DailyWorkationSerializer(serializers.ModelSerializer):
         return daily_workation
 
 
-# 1일 단위 워케이션 - 워라벨 그래프
-class DailyWorkationBalanceSerializer(serializers.ModelSerializer):
-    rest_ratio = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Daily_workation
-        fields = ('daily_workation_id', 'rest_ratio',)
-    
-    def get_rest_ratio(self, obj):
-        return obj.calculate_rest_ratio()
-    
-
 # 할 일.
 class TaskSerializer(serializers.ModelSerializer):
     daily_workation = PrimaryKeyRelatedField(queryset=Daily_workation.objects.all(), required=False)
-    time_workation = PrimaryKeyRelatedField(queryset=Time_workation.objects.all(), required=True)
-    task = serializers.CharField(required=True)
+    time_workation = PrimaryKeyRelatedField(queryset=Time_workation.objects.all(), required=False)
+    description = serializers.CharField(required=True)
     complete = serializers.BooleanField(required=False)
 
     class Meta:
@@ -126,13 +131,22 @@ class TaskSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def create(self, validated_data):
-        time_workation = validated_data.pop('time_workation', None)
-        if time_workation is None:
-            raise serializers.ValidationError("Time_workation must be provided.")
-        super().create(validated_data)
-
-        serializer = TimeTaskSerializer(data = time_workation)
-
+        time_workation = validated_data.pop('time_workation')
+        validated_data['daily_workation'] = time_workation.daily_workation
+        task = super().create(validated_data)
+        time_task_data = {
+            'task': task.task_id,
+            'time_workation': time_workation.time_workation_id
+        }
+        serializer = TimeTaskSerializer(data=time_task_data)
+        if serializer.is_valid():
+            serializer.save()
+        return task
+    
+    def to_representation(self, instance):
+        if instance.complete == 2:
+            instance.complete = False
+        return super().to_representation(instance)
 
 # 시간 단위 워케이션-할 일 중간 테이블.
 class TimeTaskSerializer(serializers.ModelSerializer):
@@ -159,58 +173,20 @@ class TimeTaskSerializer(serializers.ModelSerializer):
 class TimeWorkationSerializer(serializers.ModelSerializer):
     daily_workation = PrimaryKeyRelatedField(queryset=Daily_workation.objects.all())
     sort = serializers.IntegerField(required=True)
-    start_time = serializers.IntegerField(required=True)
-    end_time = serializers.IntegerField(required=True)
+    start_time = serializers.TimeField(required=True)
+    end_time = serializers.TimeField(required=True)
 
     class Meta:
         model = Time_workation
         fields = '__all__'
 
-    def validate(self, data):
-        daily_workation = data['daily_workation']
-        sort = data['sort']
-        start_time = data['start_time']
-        end_time = data['end_time']
-
-        # 기존 시간표 가져오기
-        existing_timeworks = Time_workation.objects.filter(daily_workation=daily_workation)
-
-        # 1시간 단위로 시간 리스트 생성
-        new_reservation_times = [start_time + i * 3600 for i in range((end_time - start_time) // 3600)]
-
-        for timework in existing_timeworks:
-            existing_times = [timework.start_time + i * 3600 for i in range((timework.end_time - timework.start_time) // 3600)]
-            # 시간이 겹치는지 확인
-            if set(new_reservation_times) & set(existing_times):
-                raise serializers.ValidationError(f"{'작업' if sort == Time_workation_sort.work else '휴식'} 시간이 겹칩니다.")
-
-        return data
-
-
-    ## get_queryset 메서드는 일반적으로 뷰셋(ViewSet) 클래스에 정의됩니다.
-    ## 시리얼라이저 클래스에서는 get_queryset을 사용하지 않기 때문에, 이를 적절한 뷰셋으로 옮기는 것이 바람직합니다.
-    # def get_queryset(self):
-    #     queryset = Time_workation.objects.all()
-    #     daily_workation_id = self.request.get('daily_workation_id', None)
-    #     if daily_workation_id is not None:
-    #         queryset = queryset.filter(daily_workation_id=daily_workation_id)
-    #     return queryset
+    def get_queryset(self):
+        queryset = Time_workation.objects.all()
+        daily_workation_id = self.request.get('daily_workation_id', None)
+        if daily_workation_id is not None:
+            queryset = queryset.filter(daily_workation_id=daily_workation_id)
+        return queryset
 
     def update(self, instance, validated_data):
         validated_data.pop('daily_workation', None)
         return super().update(instance, validated_data)
-    
-    # 추가
-    # def get_tasks(self, obj):
-    #     # Fetch tasks related to the Time_workation through Time_task
-    #     time_tasks = Time_task.objects.filter(time_workation=obj)
-    #     tasks = [time_task.task for time_task in time_tasks]
-    #     return TaskSerializer(tasks, many=True).data
-    def get_tasks(self, obj):
-        # Get all Time_task entries for this time_workation
-        time_tasks = obj.timetask_set.all()
-        # Extract the task ids from the time_tasks
-        task_ids = time_tasks.values_list('task_id', flat=True)
-        # Get the tasks
-        tasks = Task.objects.filter(task_id__in=task_ids)
-        return TaskSerializer(tasks, many=True).data

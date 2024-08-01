@@ -6,6 +6,7 @@ from .views import *
 
 urlpatterns = [
     path('', ListCreateWorkation.as_view(), name='workation_list_create'),
+    path('today/', TodayDailyWorkation.as_view(), name='today_workation'),
     path('<int:workation_id>/', RetrieveUpdateDestroyWorkation.as_view(), name='workation_retrieve_update_destroy'),
     path('daily/', DailyWorkationGenericAPIView.as_view(), name='daily_workation_list_create'),
     path('daily/<int:daily_workation_id>/', RetrieveUpdateDestroyDailyWorkation.as_view(), name='daily_workation_retrieve_update_destroy'),
@@ -16,5 +17,10 @@ urlpatterns = [
     path('daily/time/<int:time_workation_id>/task/<int:task_id>/', RetrieveUpdateDestroyTask.as_view(), name='task_retrieve_update_destroy'),
     # path('daily/time/<int:time_workation_id>/todolist/', RetrieveUpateDestroyTimeTaks.as_view()),
     # path('tiemtask/', TimeTaskGenericAPIView.as_view()),
-    path('daily/time/<int:time_workation_id>/todolist/', TasksByTimeWorkationView.as_view())
+    path('daily/time/<int:time_workation_id>/todolist/', TasksByTimeWorkationView.as_view()),
+    path('daily/<int:daily_workation_id>/memo/', RetrieveUpdateDestroyDailyWorkation.as_view(), name='daily_workation_memo'),
+    path('daily/time/task/<int:task_id>/', RetrieveUpdateDestroyTask.as_view(), name='task_retrieve_update_destroy'),
+    path('daily/<int:daily_workation_id>/todolist/', DailyWorkationTaskList.as_view(), name='daily_workation_todo_list'),
+    path('rest/', WorkationRest.as_view(), name='sido_list_create'),
+    path('space/', WorkationSpace.as_view(), name='sigg_list_create'),
 ]
