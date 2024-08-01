@@ -46,6 +46,18 @@ class TimeWorkationGenericAPIView(generics.ListCreateAPIView):
         time_workations = Time_workation.objects.filter(daily_workation=daily_workation_id)
         serializer = TimeWorkationSerializer(time_workations, many=True)
         return Response(serializer.data)
+    
+    def post(self, request, daily_workation_id):
+        request.data['daily_workation'] = daily_workation_id
+        time = request.data.get('start_time', None)
+        request.data['start_time'] = dt.time(int(time[0:2]), int(time[2:4]), int(time[4:6]))
+        time = request.data.get('end_time', None)
+        request.data['end_time'] = dt.time(int(time[0:2]), int(time[2:4]), int(time[4:6]))
+        serializer = TimeWorkationSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class TaskGenericAPIView(generics.ListCreateAPIView):
     queryset = Task.objects.all()
