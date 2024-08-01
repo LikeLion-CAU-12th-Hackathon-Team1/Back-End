@@ -11,6 +11,9 @@ from config.permissions import IsOwner
 from datetime import datetime
 import datetime as dt
 from datetime import date
+from django.views.decorators.http import require_GET
+from django.http import JsonResponse
+
 # Create your views here.
 class ListCreateWorkation(generics.ListCreateAPIView):
     queryset = Workation.objects.all()
@@ -33,7 +36,6 @@ class ListCreateWorkation(generics.ListCreateAPIView):
         serializer = WorkationSerializer(workations, many=True)
         return Response(serializer.data)
 
-# 데일리 워케이션을 사용자가 직접 생성, 삭제, 수정할 수 없기 때문에 뷰가 필요 없을 듯??
 class DailyWorkationGenericAPIView(generics.ListCreateAPIView):
     queryset = Daily_workation.objects.all()
     serializer_class = DailyWorkationSerializer
@@ -174,3 +176,24 @@ class DailyWorkationTaskList(generics.ListCreateAPIView):
         tasks = Task.objects.filter(daily_workation=daily_workation_id)
         serializer = TaskSerializer(tasks, many=True)
         return Response(serializer.data)
+
+@require_GET
+def work_rest_graph(request, daily_workation_id):
+    schedules = Time_workation.objects.filter(daily_workation=daily_workation_id)
+    work_time, rest_time = 0, 0
+    for schedule in schedules:
+        start = schedule.start_time.hour
+        if schedule.end_time.minute != 0:
+            end = schedule.end_time.hour + 1
+        else:
+            end = schedule.end_time.hour
+        
+        if schedule.sort == 1:
+            work_time += end - start
+        else:
+            rest_time += end - start
+
+    return JsonResponse({
+        'raio' : rest_time / (work_time + rest_time) * 100,
+        'status' : 200 
+        })
