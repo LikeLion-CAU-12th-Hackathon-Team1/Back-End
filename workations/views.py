@@ -53,6 +53,11 @@ class TimeWorkationGenericAPIView(generics.ListCreateAPIView):
         if daily_workation_id is not None:
             queryset = queryset.filter(daily_workation_id=daily_workation_id)
         return queryset
+    
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
 
 class TaskGenericAPIView(generics.ListCreateAPIView):
     queryset = Task.objects.all()
@@ -85,7 +90,17 @@ class RetrieveUpdateDestroyTask(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = TaskSerializer
     lookup_field = 'task_id'
 
-class RetrieveUpateDestroyTimeTaks(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Time_workation.objects.all()
-    serializer_class = TimeWorkationSerializer
-    lookup_field = 'time_workation_id'
+# 추가
+# class RetrieveUpateDestroyTimeTaks(generics.RetrieveUpdateDestroyAPIView):
+#     queryset = Time_workation.objects.all()
+#     serializer_class = TimeWorkationSerializer
+#     lookup_field = 'time_workation_id'
+
+
+class TasksByTimeWorkationView(generics.ListAPIView):
+    serializer_class = TaskSerializer
+
+    def get_queryset(self):
+        time_workation_id = self.kwargs['time_workation_id']
+        # Get all tasks related to the Time_workation with the given ID
+        return Task.objects.filter(time_task__time_workation_id=time_workation_id)

@@ -6,6 +6,8 @@ from time_table import CreateTimeTable
 from config.permissions import IsAuthenticatedAndReturnUser
 from rest_framework.response import Response
 
+from django.core.exceptions import ValidationError
+
 
 # workation-space 중간 테이블.
 class WorkationSpaceSerializer(serializers.ModelSerializer):
@@ -84,11 +86,6 @@ class DailyWorkationSerializer(serializers.ModelSerializer):
         model = Daily_workation
         fields = '__all__'
 
-    def get_time_workations(self, obj):
-        time_workations = Time_workation.objects.filter(daily_workation=obj)
-        serializer = TimeWorkationSerializer(time_workations, many=True)
-        return serializer.data
-
     def create(self, validated_data):
         workation = validated_data.pop('workation')
         base_time_table = validated_data.pop('base_time_table')
@@ -134,7 +131,7 @@ class TaskSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Time_workation must be provided.")
         super().create(validated_data)
 
-        # serializer = TimeTaskSerializer(data = time_workation)
+        serializer = TimeTaskSerializer(data = time_workation)
 
 
 # 시간 단위 워케이션-할 일 중간 테이블.
@@ -156,6 +153,7 @@ class TimeTaskSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Task and Time_workation must be related to the same Daily_workation.")
         
         return validated_data
+    
 
 # 시간 단위 워케이션.
 class TimeWorkationSerializer(serializers.ModelSerializer):
@@ -188,6 +186,7 @@ class TimeWorkationSerializer(serializers.ModelSerializer):
 
         return data
 
+
     ## get_queryset 메서드는 일반적으로 뷰셋(ViewSet) 클래스에 정의됩니다.
     ## 시리얼라이저 클래스에서는 get_queryset을 사용하지 않기 때문에, 이를 적절한 뷰셋으로 옮기는 것이 바람직합니다.
     # def get_queryset(self):
@@ -200,3 +199,18 @@ class TimeWorkationSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         validated_data.pop('daily_workation', None)
         return super().update(instance, validated_data)
+    
+    # 추가
+    # def get_tasks(self, obj):
+    #     # Fetch tasks related to the Time_workation through Time_task
+    #     time_tasks = Time_task.objects.filter(time_workation=obj)
+    #     tasks = [time_task.task for time_task in time_tasks]
+    #     return TaskSerializer(tasks, many=True).data
+    def get_tasks(self, obj):
+        # Get all Time_task entries for this time_workation
+        time_tasks = obj.timetask_set.all()
+        # Extract the task ids from the time_tasks
+        task_ids = time_tasks.values_list('task_id', flat=True)
+        # Get the tasks
+        tasks = Task.objects.filter(task_id__in=task_ids)
+        return TaskSerializer(tasks, many=True).data
