@@ -32,8 +32,8 @@ class Workation(models.Model):
     workation_id = models.AutoField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     sigg = models.ForeignKey(Sigg, on_delete=models.CASCADE)
-    start_date = models.BigIntegerField()
-    end_date = models.BigIntegerField()
+    start_date = models.DateField()
+    end_date = models.DateField()
     start_sleep = models.IntegerField(default=0000)
     end_sleep = models.IntegerField(default=2359)
     work_style = models.IntegerField(
@@ -59,7 +59,7 @@ class Workation_rest(models.Model):
 class Daily_workation(models.Model):
     daily_workation_id = models.AutoField(primary_key=True)
     workation = models.ForeignKey(Workation, on_delete=models.CASCADE)
-    date = models.BigIntegerField()
+    date = models.DateField()
     memo = models.TextField(blank=True)
 
 
@@ -72,8 +72,8 @@ class Time_workation(models.Model):
     time_workation_id = models.AutoField(primary_key=True)
     daily_workation = models.ForeignKey(Daily_workation, on_delete=models.CASCADE)
     sort = models.IntegerField(choices = Time_workation_sort.choices, null=False)
-    start_time = models.BigIntegerField()
-    end_time = models.BigIntegerField()
+    start_time = models.TimeField()
+    end_time = models.TimeField()
 
 
 # 할 일

@@ -3,9 +3,9 @@ from rest_framework.serializers import PrimaryKeyRelatedField
 from rest_framework.fields import ReadOnlyField, JSONField
 from .models import *
 from time_table import CreateTimeTable
-from config.permissions import IsAuthenticatedAndReturnUser
-from rest_framework.response import Response
-
+# from config.permissions import IsAuthenticatedAndReturnUser
+# from rest_framework.response import Response
+import datetime
 
 # workation-space 중간 테이블.
 class WorkationSpaceSerializer(serializers.ModelSerializer):
@@ -29,7 +29,6 @@ class WorkationRestSerializer(serializers.ModelSerializer):
 
 # 전체 workation.
 class WorkationSerializer(serializers.ModelSerializer):
-    # user = PrimaryKeyRelatedField(queryset=User.objects.all())
     sigg = PrimaryKeyRelatedField(queryset=Sigg.objects.all())
 
     workation2space = WorkationSpaceSerializer(many=True, required=False)
@@ -70,15 +69,23 @@ class WorkationSerializer(serializers.ModelSerializer):
                 )
             if serializer.is_valid():
                 serializer.save()
-            current_date += 1
+            current_date += datetime.timedelta(days=1)
 
         return workation
+    
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        # 날짜 필드를 8자리 숫자 문자열로 변환
+        ret['start_date'] = instance.start_date.strftime('%Y%m%d')
+        ret['end_date'] = instance.end_date.strftime('%Y%m%d')
+        return ret
         
     
 # 1일 단위 워케이션.
 class DailyWorkationSerializer(serializers.ModelSerializer):
     workation = PrimaryKeyRelatedField(queryset=Workation.objects.all())
     base_time_table = JSONField(required=False)
+    memo = serializers.CharField(required=False)
 
     class Meta:
         model = Daily_workation
@@ -98,7 +105,12 @@ class DailyWorkationSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("Invalid time data.")
 
         return daily_workation
-
+    
+    def update(self, instance, validated_data):
+        memo = validated_data.pop('memo', None)
+        instance.memo = memo
+        instance.save()
+        return instance
 
 # 할 일.
 class TaskSerializer(serializers.ModelSerializer):
@@ -152,8 +164,8 @@ class TimeTaskSerializer(serializers.ModelSerializer):
 class TimeWorkationSerializer(serializers.ModelSerializer):
     daily_workation = PrimaryKeyRelatedField(queryset=Daily_workation.objects.all())
     sort = serializers.IntegerField(required=True)
-    start_time = serializers.IntegerField(required=True)
-    end_time = serializers.IntegerField(required=True)
+    start_time = serializers.TimeField(required=True)
+    end_time = serializers.TimeField(required=True)
 
     class Meta:
         model = Time_workation
@@ -165,7 +177,39 @@ class TimeWorkationSerializer(serializers.ModelSerializer):
         if daily_workation_id is not None:
             queryset = queryset.filter(daily_workation_id=daily_workation_id)
         return queryset
+    
+    def create(self, validated_data):
+        hours = validated_data['start_time'] // 10000
+        minutes = (validated_data['start_time'] % 10000) // 100
+        seconds = validated_data['start_time'] % 100
+        validated_data['start_time'] = datetime.time(hours, minutes, seconds)
+        hours = validated_data['end_time'] // 10000
+        minutes = (validated_data['end_time'] % 10000) // 100
+        seconds = validated_data['end_time'] % 100
+        validated_data['end_time'] = datetime.time(hours, minutes, seconds)
+        return super().create(validated_data)
 
     def update(self, instance, validated_data):
         validated_data.pop('daily_workation', None)
         return super().update(instance, validated_data)
+    
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['start_time'] = instance.start_time.strftime('%H%M%S')
+        representation['end_time'] = instance.end_time.strftime('%H%M%S')
+        return representation
+
+class TodayWorkationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Daily_workation
+        fields = '__all__'
+
+class SpaceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Space
+        fields = '__all__'
+
+class RestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Rest
+        fields = '__all__'
