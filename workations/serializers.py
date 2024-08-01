@@ -84,6 +84,11 @@ class DailyWorkationSerializer(serializers.ModelSerializer):
         model = Daily_workation
         fields = '__all__'
 
+    def get_time_workations(self, obj):
+        time_workations = Time_workation.objects.filter(daily_workation=obj)
+        serializer = TimeWorkationSerializer(time_workations, many=True)
+        return serializer.data
+
     def create(self, validated_data):
         workation = validated_data.pop('workation')
         base_time_table = validated_data.pop('base_time_table')
@@ -99,6 +104,7 @@ class DailyWorkationSerializer(serializers.ModelSerializer):
 
         return daily_workation
 
+
 # 1일 단위 워케이션 - 워라벨 그래프
 class DailyWorkationBalanceSerializer(serializers.ModelSerializer):
     rest_ratio = serializers.SerializerMethodField()
@@ -109,9 +115,7 @@ class DailyWorkationBalanceSerializer(serializers.ModelSerializer):
     
     def get_rest_ratio(self, obj):
         return obj.calculate_rest_ratio()
-
-
-
+    
 
 # 할 일.
 class TaskSerializer(serializers.ModelSerializer):
@@ -130,18 +134,10 @@ class TaskSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Time_workation must be provided.")
         super().create(validated_data)
 
-        serializer = TimeTaskSerializer(data = time_workation)
+        # serializer = TimeTaskSerializer(data = time_workation)
 
 
 # 시간 단위 워케이션-할 일 중간 테이블.
-# class TimeTaskSerializer(serializers.ModelSerializer):
-#     task = TaskSerializer(many=True)
-
-#     class Meta:
-#         model = Time_task
-#         read_only_fields = ('time_workation_id', 'task_id')
-#         fields = ('task',)
-
 class TimeTaskSerializer(serializers.ModelSerializer):
     task = PrimaryKeyRelatedField(queryset=Task.objects.all())
     time_workation = PrimaryKeyRelatedField(queryset=Time_workation.objects.all())
@@ -204,139 +200,3 @@ class TimeWorkationSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         validated_data.pop('daily_workation', None)
         return super().update(instance, validated_data)
-    
-
-# class WorkLifeBalanceSerializer(serializers.ModelSerializer):
-#     daily_workation = PrimaryKeyRelatedField(queryset=Daily_workation.objects.all())
-#     sort = serializers.IntegerField(required=True)
-#     start_time = serializers.IntegerField(required=True)
-#     end_time = serializers.IntegerField(required=True)
-
-#     class Meta:
-#         model = Time_workation
-#         fields = '__all__'
-
-#     def validate(self, data):
-#         daily_workation = data['daily_workation']
-#         sort = data['sort']
-#         start_time = data['start_time']
-#         end_time = data['end_time']
-
-#         existing_timeworks = Time_workation.objects.filter(daily_workation=daily_workation)
-
-#         for timework in existing_timeworks:
-#             duration = (timework.end_time - timework.start_time) // 3600
-#             if timework.sort == 1:  # Assuming 1 is for 'work'
-#                 work_time += duration
-#             else:
-#                 rest_time += duration
-
-#         total_time = work_time + rest_time
-#         if total_time > 0:
-#             rest_ratio = rest_time / total_time
-#         else:
-#             rest_ratio = 0  # Avoid division by zero
-        
-#         data['rest_ratio'] = rest_ratio
-
-#         return data
-
-
-# from datetime import datetime, timedelta
-
-# class WorkLifeBalanceSerializer(serializers.ModelSerializer):
-#     rest_to_total_ratio = serializers.SerializerMethodField()
-
-#     class Meta:
-#         model = Time_workation
-#         read_only_fields = ('daily_workation',)
-#         fields = ('sort', 'start_time', 'end_time', 'rest_to_total_ratio',)
-    
-#     def get_rest_to_total_ratio(self, obj):
-#         work_time = timedelta()
-#         rest_time = timedelta()
-
-#         workations = Time_workation.objects.filter(daily_workation=obj.daily_workation)
-
-#         for workation in workations:
-#             duration = workation.end_time - workation.start_time
-#             if workation.sort == 1:
-#                 work_time += duration
-#             elif workation.sort == 2:
-#                 rest_time += duration
-
-#         if work_time + rest_time == 0:
-#             return 0
-#         return rest_time / (work_time + rest_time)
-
-
-#####
-
-    # def get_rest_to_total_ratio(self, obj):
-    #     work_time = timedelta()
-    #     rest_time = timedelta()
-
-    # # 동일한 daily_workation에 대한 모든 workation을 가져옵니다.
-    #     workations = Time_workation.objects.filter(daily_workation=obj.daily_workation)
-    
-    #     for workation in workations:
-    #         # datetime.combine()을 사용하여 time 객체를 datetime 객체로 변환합니다.
-    #         start_time = datetime.combine(datetime.today(), workation.start_time)
-    #         end_time = datetime.combine(datetime.today(), workation.end_time)
-    #         duration = end_time - start_time
-            
-    #         # work와 rest에 따라 시간을 누적합니다.
-    #         if workation.sort == Time_workation_sort.work:
-    #             work_time += duration
-    #         elif workation.sort == Time_workation_sort.rest:
-    #             rest_time += duration
-
-    #         # 총 시간을 계산합니다.
-    #         total_time = work_time + rest_time
-    #         if total_time == timedelta(0):
-    #             return 0
-            
-    #         # rest 시간의 비율을 반환합니다.
-    #         return rest_time / total_time
-
-
-# class WorkLifeBalanceSerializer(serializers.ModelSerializer):
-#     rest_to_total_ratio = serializers.SerializerMethodField()
-
-#     class Meta:
-#         model = Time_workation
-#         read_only_fields = ('daily_workation',)
-#         fields = ('sort', 'start_time', 'end_time', 'rest_to_total_ratio',)
-    
-#     def get_rest_to_total_ratio(self, obj):
-#         total_work_time = timedelta()
-#         total_rest_time = timedelta()
-        
-#         # Get all Time_workation entries for the same daily_workation as the current object
-#         workations = Time_workation.objects.filter(daily_workation=obj.daily_workation)
-        
-#         for workation in workations:
-#             duration = self.calculate_duration(workation.start_time, workation.end_time)
-#             if workation.sort == Time_workation_sort.work:
-#                 total_work_time += duration
-#             elif workation.sort == Time_workation_sort.rest:
-#                 total_rest_time += duration
-        
-#         total_time = total_work_time + total_rest_time
-#         if total_time == timedelta():
-#             return 0
-        
-#         # Calculate the ratio of rest time to total time
-#         return total_rest_time / total_time
-    
-#     def calculate_duration(self, start_time, end_time):
-#         """Calculate the duration between start_time and end_time assuming they are within the same day"""
-#         today = datetime.today().date()
-#         start_datetime = datetime.combine(today, start_time)
-#         end_datetime = datetime.combine(today, end_time)
-        
-#         # if end_datetime < start_datetime:
-#         #     # Handle cases where end_time is before start_time (if this can happen)
-#         #     end_datetime += timedelta(days=1)
-        
-#         return end_datetime - start_datetime

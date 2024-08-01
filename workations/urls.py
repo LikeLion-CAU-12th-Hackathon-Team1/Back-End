@@ -14,5 +14,6 @@ urlpatterns = [
     path('daily/time/<int:time_workation_id>/', RetrieveUpdateDestroyTimeWorkation.as_view(), name='time_workation_retrieve_update_destroy'),
     path('daily/time/<int:time_workation_id>/task/', TaskGenericAPIView.as_view(), name='task_list_create'),
     path('daily/time/<int:time_workation_id>/task/<int:task_id>/', RetrieveUpdateDestroyTask.as_view(), name='task_retrieve_update_destroy'),
+    path('daily/time/<int:time_workation_id>/todolist/', RetrieveUpateDestroyTimeTaks.as_view()),
     # path('tiemtask/', TimeTaskGenericAPIView.as_view()),
 ]

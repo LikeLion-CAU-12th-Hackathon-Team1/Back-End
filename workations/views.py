@@ -84,3 +84,8 @@ class RetrieveUpdateDestroyTask(generics.RetrieveUpdateDestroyAPIView):
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
     lookup_field = 'task_id'
+
+class RetrieveUpateDestroyTimeTaks(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Time_workation.objects.all()
+    serializer_class = TimeWorkationSerializer
+    lookup_field = 'time_workation_id'
