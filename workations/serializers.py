@@ -3,6 +3,9 @@ from rest_framework.serializers import PrimaryKeyRelatedField
 from rest_framework.fields import ReadOnlyField, JSONField
 from .models import *
 from time_table import CreateTimeTable
+# from config.permissions import IsAuthenticatedAndReturnUser
+# from rest_framework.response import Response
+import datetime
 
 # workation-space 중간 테이블.
 class WorkationSpaceSerializer(serializers.ModelSerializer):
@@ -13,10 +16,6 @@ class WorkationSpaceSerializer(serializers.ModelSerializer):
         model = Workation_space
         fields = '__all__'
         depth = 1
-
-    def save(self, **kwargs):
-        super().save(**kwargs)
-        serializer = WorkationSpaceSerializer(validated_data=self.validated_data)
     
 # workation-rest 중간 테이블.
 class WorkationRestSerializer(serializers.ModelSerializer):
@@ -30,7 +29,6 @@ class WorkationRestSerializer(serializers.ModelSerializer):
 
 # 전체 workation.
 class WorkationSerializer(serializers.ModelSerializer):
-    user = PrimaryKeyRelatedField(queryset=User.objects.all())
     sigg = PrimaryKeyRelatedField(queryset=Sigg.objects.all())
 
     workation2space = WorkationSpaceSerializer(many=True, required=False)
@@ -56,6 +54,7 @@ class WorkationSerializer(serializers.ModelSerializer):
         base_time_table = time_table_creator.create_time_table(
             validated_data['start_sleep'], 
             validated_data['end_sleep'], 
+            # gpt 프롬프트 수정하고 변경해야 함.
             8, 6, 10)
 
         current_date = validated_data['start_date']
@@ -70,15 +69,23 @@ class WorkationSerializer(serializers.ModelSerializer):
                 )
             if serializer.is_valid():
                 serializer.save()
-            current_date += 1
+            current_date += datetime.timedelta(days=1)
 
         return workation
+    
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        # 날짜 필드를 8자리 숫자 문자열로 변환
+        ret['start_date'] = instance.start_date.strftime('%Y%m%d')
+        ret['end_date'] = instance.end_date.strftime('%Y%m%d')
+        return ret
         
     
 # 1일 단위 워케이션.
 class DailyWorkationSerializer(serializers.ModelSerializer):
     workation = PrimaryKeyRelatedField(queryset=Workation.objects.all())
     base_time_table = JSONField(required=False)
+    memo = serializers.CharField(required=False)
 
     class Meta:
         model = Daily_workation
@@ -98,35 +105,41 @@ class DailyWorkationSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("Invalid time data.")
 
         return daily_workation
-
+    
+    def update(self, instance, validated_data):
+        memo = validated_data.pop('memo', None)
+        instance.memo = memo
+        instance.save()
+        return instance
 
 # 할 일.
 class TaskSerializer(serializers.ModelSerializer):
-    daily_workation = PrimaryKeyRelatedField(queryset=Daily_workation.objects.all())
+    daily_workation = PrimaryKeyRelatedField(queryset=Daily_workation.objects.all(), required=False)
+    time_workation = PrimaryKeyRelatedField(queryset=Time_workation.objects.all(), required=True)
+    task = serializers.CharField(required=True)
+    complete = serializers.BooleanField(required=False)
 
     class Meta:
         model = Task
         fields = '__all__'
 
+    def create(self, validated_data):
+        time_workation = validated_data.pop('time_workation', None)
+        if time_workation is None:
+            raise serializers.ValidationError("Time_workation must be provided.")
+        super().create(validated_data)
+
+        serializer = TimeTaskSerializer(data = time_workation)
+
+
 # 시간 단위 워케이션-할 일 중간 테이블.
-class TimeTaskSerializer(serializers.ModelSerializer):
-    task = TaskSerializer(many=True)
+# class TimeTaskSerializer(serializers.ModelSerializer):
+#     task = TaskSerializer(many=True)
 
-    class Meta:
-        model = Time_task
-        read_only_fields = ('time_workation_id', 'task_id')
-        fields = ('task',)
-
-# 시간 단위 워케이션.
-class TimeWorkationSerializer(serializers.ModelSerializer):
-    daily_workation = PrimaryKeyRelatedField(queryset=Daily_workation.objects.all())
-    sort = serializers.IntegerField(required=True)
-    start_time = serializers.IntegerField(required=True)
-    end_time = serializers.IntegerField(required=True)
-
-    class Meta:
-        model = Time_workation
-        fields = '__all__'
+#     class Meta:
+#         model = Time_task
+#         read_only_fields = ('time_workation_id', 'task_id')
+#         fields = ('task',)
 
 class TimeTaskSerializer(serializers.ModelSerializer):
     task = PrimaryKeyRelatedField(queryset=Task.objects.all())
@@ -146,3 +159,57 @@ class TimeTaskSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Task and Time_workation must be related to the same Daily_workation.")
         
         return validated_data
+
+# 시간 단위 워케이션.
+class TimeWorkationSerializer(serializers.ModelSerializer):
+    daily_workation = PrimaryKeyRelatedField(queryset=Daily_workation.objects.all())
+    sort = serializers.IntegerField(required=True)
+    start_time = serializers.TimeField(required=True)
+    end_time = serializers.TimeField(required=True)
+
+    class Meta:
+        model = Time_workation
+        fields = '__all__'
+
+    def get_queryset(self):
+        queryset = Time_workation.objects.all()
+        daily_workation_id = self.request.get('daily_workation_id', None)
+        if daily_workation_id is not None:
+            queryset = queryset.filter(daily_workation_id=daily_workation_id)
+        return queryset
+    
+    def create(self, validated_data):
+        hours = validated_data['start_time'] // 10000
+        minutes = (validated_data['start_time'] % 10000) // 100
+        seconds = validated_data['start_time'] % 100
+        validated_data['start_time'] = datetime.time(hours, minutes, seconds)
+        hours = validated_data['end_time'] // 10000
+        minutes = (validated_data['end_time'] % 10000) // 100
+        seconds = validated_data['end_time'] % 100
+        validated_data['end_time'] = datetime.time(hours, minutes, seconds)
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        validated_data.pop('daily_workation', None)
+        return super().update(instance, validated_data)
+    
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['start_time'] = instance.start_time.strftime('%H%M%S')
+        representation['end_time'] = instance.end_time.strftime('%H%M%S')
+        return representation
+
+class TodayWorkationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Daily_workation
+        fields = '__all__'
+
+class SpaceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Space
+        fields = '__all__'
+
+class RestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Rest
+        fields = '__all__'

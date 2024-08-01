@@ -74,7 +74,6 @@ class Kakao_callback(View):
             }
             response = requests.get(kakao_user_api, headers=headers)
             response_json = response.json()
-            print(response_json)
 
             serialize_data = {
                 'kakao_id' : response_json.get('id'),
