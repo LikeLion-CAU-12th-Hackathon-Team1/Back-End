@@ -1,0 +1,8 @@
+<title>Upload Images from Folder</title></head><body>
+    <h2>Upload Images from Folder</h2>
+    <form method="post">
+        {% csrf_token %}
+        <label for="folder_path">Folder Path:</label>
+        <input type="text" id="folder_path" name="folder_path">
+        <button type="submit">Upload</button>
+    </form></body></html>
