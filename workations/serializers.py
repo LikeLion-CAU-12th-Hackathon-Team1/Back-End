@@ -92,6 +92,18 @@ class WorkationSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("End date must be later than start date.")
         return value
     
+    def validate(self, validated_data):
+        user = self.initial_data['user']
+        workations = Workation.objects.filter(user=user)
+        for workation in workations:
+            if workation.start_date <= validated_data['start_date'] < workation.end_date:
+                raise serializers.ValidationError("Start date overlaps with existing workation.")
+            if workation.start_date < validated_data['end_date'] <= workation.end_date:
+                raise serializers.ValidationError("End date overlaps with existing workation.")
+            if validated_data['start_date'] <= workation.start_date and validated_data['end_date'] >= workation.end_date:
+                raise serializers.ValidationError("Date overlaps with existing workation.")
+        return validated_data
+    
 # 1일 단위 워케이션.
 class DailyWorkationSerializer(serializers.ModelSerializer):
     workation = PrimaryKeyRelatedField(queryset=Workation.objects.all())
