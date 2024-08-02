@@ -1,9 +1,7 @@
 from django.shortcuts import render
 from .models import *
 from .serializers import *
-# from django.views import View
 from rest_framework import generics
-# from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
@@ -58,7 +56,10 @@ class TimeWorkationGenericAPIView(generics.ListCreateAPIView):
         time = request.data.get('end_time', None)
         if time is None:
             return Response(data='end_time is required', status=status.HTTP_400_BAD_REQUEST)
-        request.data['end_time'] = dt.time(int(time[0:2]), int(time[2:4]), int(time[4:6]))
+        if request.data['end_time'] == '240000':
+            request.data['end_time'] = dt.time(23, 59, 59)
+        else:   
+            request.data['end_time'] = dt.time(int(time[0:2]), int(time[2:4]), int(time[4:6]))
         serializer = TimeWorkationSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -91,6 +92,15 @@ class RetrieveUpdateDestroyWorkation(generics.RetrieveUpdateDestroyAPIView):
     queryset = Workation.objects.all()
     serializer_class = WorkationSerializer
     lookup_field = 'workation_id'
+
+    def get(self, request, workation_id):
+        workation = Workation.objects.get(workation_id=workation_id)
+        serializer = WorkationSerializer(workation)
+        data = serializer.data
+        daily_workations = Daily_workation.objects.filter(workation=workation_id)
+        daily_workation_list = DailyWorkationSerializer(daily_workations, many=True).data
+        data['daily_workation_list'] = daily_workation_list
+        return Response(data)
 
 class RetrieveUpdateDestroyDailyWorkation(generics.RetrieveUpdateDestroyAPIView):
     queryset = Daily_workation.objects.all()
@@ -158,6 +168,7 @@ class TodayDailyWorkation(generics.ListAPIView):
             return Response(data='there is no schedule today', status=status.HTTP_404_NOT_FOUND)
     
         serializer = DailyWorkationSerializer(daily_workation)
+        serializer.data['sigg'] = WorkationSerializer(daily_workation.workation).data['sigg']
         return Response(serializer.data)
 
 class WorkationRest(generics.ListCreateAPIView):
@@ -198,6 +209,6 @@ def work_rest_graph(request, daily_workation_id):
             'status' : 200
         })
     return JsonResponse({
-        'raio' : rest_time / (work_time + rest_time) * 100,
+        'ratio' : rest_time / (work_time + rest_time) * 100,
         'status' : 200 
         })
