@@ -46,7 +46,7 @@ class Workation(models.Model):
     )
 
     @property
-    def owner(self):
+    def user(self):
         return self.user
 
 class Workation_space(models.Model):
@@ -67,7 +67,7 @@ class Daily_workation(models.Model):
     memo = models.TextField(blank=True)
 
     @property
-    def owner(self):
+    def user(self):
         return self.workation.user
 
 # 시간별
@@ -83,7 +83,7 @@ class Time_workation(models.Model):
     end_time = models.TimeField()
 
     @property
-    def owner(self):
+    def user(self):
         return self.daily_workation.workation.user
 
 # 할 일
@@ -101,7 +101,7 @@ class Task(models.Model):
     )
 
     @property
-    def owner(self):
+    def user(self):
         return self.daily_workation.workation.user
 
 class Time_task(models.Model):
