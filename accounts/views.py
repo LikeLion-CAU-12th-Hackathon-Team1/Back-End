@@ -11,6 +11,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 from config.permissions import IsAuthenticatedAndReturnUser
+from django.contrib.auth import logout
+from rest_framework.permissions import IsAuthenticated
 
 KAKAO_CLIENT_ID = get_secret("KAKAO_CLIENT_ID")
 KAKAO_REDIRECT = get_secret("KAKAO_REDIRECT")
@@ -133,3 +135,10 @@ class UserNickname(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        logout(request)
+        return Response({"message" : "로그아웃되었습니다."}, status=status.HTTP_200_OK)
