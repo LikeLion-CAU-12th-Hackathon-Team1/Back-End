@@ -30,9 +30,10 @@ class WorkationRestSerializer(serializers.ModelSerializer):
 # 전체 workation.
 class WorkationSerializer(serializers.ModelSerializer):
     sigg = PrimaryKeyRelatedField(queryset=Sigg.objects.all())
-
     workation2space = WorkationSpaceSerializer(many=True, required=False)
     workation2rest = WorkationRestSerializer(many=True, required=False)
+    start_date = serializers.DateField(format='%Y%m%d', input_formats=['%Y%m%d'])
+    end_date = serializers.DateField(format='%Y%m%d', input_formats=['%Y%m%d'])
 
     class Meta:
         model = Workation
@@ -80,14 +81,22 @@ class WorkationSerializer(serializers.ModelSerializer):
         ret['start_date'] = instance.start_date.strftime('%Y%m%d')
         ret['end_date'] = instance.end_date.strftime('%Y%m%d')
         return ret
-        
+    
+    def validate_start_date(self, value):
+        if datetime.date.today() > value:
+            raise serializers.ValidationError("Start date must be later than today.")
+        return value
+    
+    def validate_end_date(self, value):
+        if self.initial_data['start_date'] > self.initial_data['end_date']:
+            raise serializers.ValidationError("End date must be later than start date.")
+        return value
     
 # 1일 단위 워케이션.
 class DailyWorkationSerializer(serializers.ModelSerializer):
     workation = PrimaryKeyRelatedField(queryset=Workation.objects.all())
     base_time_table = JSONField(required=False)
     memo = serializers.CharField(required=False)
-    queryset = Daily_workation.objects.all().order_by('date')
 
     class Meta:
         model = Daily_workation

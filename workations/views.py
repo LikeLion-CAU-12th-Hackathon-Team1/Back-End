@@ -19,10 +19,6 @@ class ListCreateWorkation(generics.ListCreateAPIView):
 
     def post(self, request):
         request.data['user'] = request.user.id
-        start = request.data['start_date']
-        end = request.data['end_date']
-        request.data['start_date'] = dt.date(int(start[0:4]), int(start[4:6]), int(start[6:8]))
-        request.data['end_date'] = dt.date(int(end[0:4]), int(end[4:6]), int(end[6:8]))
         serializer = WorkationSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -213,3 +209,4 @@ def work_rest_graph(request, daily_workation_id):
         'ratio' : rest_time / (work_time + rest_time) * 100,
         'status' : 200 
         })
+
