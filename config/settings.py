@@ -132,7 +132,6 @@ DATABASES = {
     # "default": {
     #     "ENGINE": "django.db.backends.sqlite3",
     #     "NAME": BASE_DIR / "db.sqlite3",
-    # }
     "default" : {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': DB_NAME,
@@ -147,6 +146,7 @@ DATABASES = {
         }
     }
 }
+
 
 AUTH_USER_MODEL = 'accounts.User'
 
@@ -208,7 +208,7 @@ REST_FRAMEWORK = {
     ),
     # JWT 토큰을 사용해서 인증을 하기 위해 설정
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
+        'config.permissions.IsOwner',
     ],
 }
 

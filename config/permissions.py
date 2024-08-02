@@ -1,4 +1,4 @@
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, BasePermission, SAFE_METHODS
 from rest_framework_simplejwt.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
@@ -30,3 +30,13 @@ class IsAuthenticatedAndReturnUser(IsAuthenticated):
             return False
         except Exception:
             return False    
+
+# class IsOwnerOrReadOnly(BasePermission):
+#     def has_object_permission(self, request, view, obj):
+#         if request.method in SAFE_METHODS:
+#             return True
+#         return request.user == obj.owner
+
+class IsOwner(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return request.user == obj.owner

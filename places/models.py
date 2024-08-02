@@ -14,14 +14,14 @@ class Sido(models.Model):
 
 class Sigg(models.Model):
     sigg_id = models.AutoField(primary_key=True)
-    sido_id = models.ForeignKey(Sido, on_delete=models.CASCADE)
+    sido = models.ForeignKey(Sido, on_delete=models.CASCADE)
     sigg_name = models.CharField(max_length=10, null=False)
     sigg_code = models.SmallIntegerField(null=False)
 
 class Place(models.Model):
     place_id = models.AutoField(primary_key=True)
     place_code = models.BigIntegerField()
-    sigg_id = models.ForeignKey(Sigg, on_delete=models.CASCADE)
+    sigg = models.ForeignKey(Sigg, on_delete=models.CASCADE)
     placename = models.CharField(max_length=30, null=False)
     address = models.CharField(max_length=200, null=False)
     image = models.URLField(max_length=512, null=True)
