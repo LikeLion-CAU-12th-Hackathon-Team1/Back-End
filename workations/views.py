@@ -45,17 +45,6 @@ class TimeWorkationGenericAPIView(generics.ListCreateAPIView):
     
     def post(self, request, daily_workation_id):
         request.data['daily_workation'] = daily_workation_id
-        time = request.data.get('start_time', None)
-        if time is None:
-            return Response(data='start_time is required', status=status.HTTP_400_BAD_REQUEST)
-        request.data['start_time'] = dt.time(int(time[0:2]), int(time[2:4]), int(time[4:6]))
-        time = request.data.get('end_time', None)
-        if time is None:
-            return Response(data='end_time is required', status=status.HTTP_400_BAD_REQUEST)
-        if request.data['end_time'] == '240000':
-            request.data['end_time'] = dt.time(23, 59, 59)
-        else:   
-            request.data['end_time'] = dt.time(int(time[0:2]), int(time[2:4]), int(time[4:6]))
         serializer = TimeWorkationSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -127,12 +116,7 @@ class RetrieveUpdateDestroyTimeWorkation(generics.RetrieveUpdateDestroyAPIView):
 
     def patch(self, request, time_workation_id):
         request.data['time_workation_id'] = time_workation_id
-        start_time = request.data.get('start_time', None)
-        if start_time:
-            request.data['start_time'] = dt.time(int(start_time[0:2]), int(start_time[2:4]), int(start_time[4:6]))
-        end_time = request.data.get('end_time', None)
-        if end_time:
-            request.data['end_time'] = dt.time(int(end_time[0:2]), int(end_time[2:4]), int(end_time[4:6]))
+        request.data['daily_workation'] = Time_workation.objects.get(time_workation_id=time_workation_id).daily_workation.daily_workation_id
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=True)
         if serializer.is_valid():
