@@ -53,11 +53,8 @@ class WorkationSerializer(serializers.ModelSerializer):
 
         time_table_creator = CreateTimeTable()
         base_time_table = time_table_creator.create_time_table(
-            validated_data['start_sleep'], 
-            validated_data['end_sleep'],
-            validated_data['work_style'],
-            validated_data['work_purpose']
-            )
+            validated_data['start_sleep'], validated_data['end_sleep'],
+            validated_data['work_style'], validated_data['work_purpose'])
 
         current_date = validated_data['start_date']
         end_date = validated_data['end_date']
@@ -67,8 +64,7 @@ class WorkationSerializer(serializers.ModelSerializer):
                     'workation': workation.workation_id,
                     'date': current_date,
                     'base_time_table': base_time_table
-                    }
-                )
+                    })
             if serializer.is_valid():
                 serializer.save()
             current_date += datetime.timedelta(days=1)
@@ -116,32 +112,18 @@ class DailyWorkationSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         base_time_table = validated_data.pop('base_time_table', None)
-        # workation = validated_data.pop('workation')
-        # daily_workation = Daily_workation.objects.create(workation=workation, **validated_data)
         daily_workation = super().create(validated_data)
-        if base_time_table is not None:
+        if base_time_table:
             for time_data in base_time_table:
                 time_data['daily_workation'] = daily_workation.daily_workation_id
-                # time_data['start_time'] = int(time_data['start_time'])
-                # time_data['end_time'] = int(time_data['end_time'])
-
-                hours = int(time_data['start_time'][:2])
-                minutes = int(time_data['start_time'][2:4])
-                seconds = int(time_data['start_time'][4:])
-                time_data['start_time'] = datetime.time(hours, minutes, seconds)
                 if time_data['end_time'] == '240000':
-                    time_data['end_time'] = datetime.time(23, 59, 59)
-                else:
-                    hours = int(time_data['end_time'][:2])
-                    minutes = int(time_data['end_time'][2:4])
-                    seconds = int(time_data['end_time'][4:6])
-                    time_data['end_time'] = datetime.time(hours, minutes, seconds)
+                    time_data['end_time'] = '235959'
 
-                serializer = TimeWorkationSerializer(data = time_data)
-            if serializer.is_valid():
-                serializer.save()
-            else:
-                raise serializers.ValidationError("Invalid time data.")
+                serializer = TimeWorkationSerializer(data=time_data)
+                if serializer.is_valid():
+                    serializer.save()
+                else:
+                    raise serializers.ValidationError("Invalid time data.")
 
         return daily_workation
     
@@ -210,30 +192,6 @@ class TimeWorkationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Time_workation
         fields = '__all__'
-
-    def get_queryset(self):
-        queryset = Time_workation.objects.all()
-        daily_workation_id = self.request.get('daily_workation_id', None)
-        if daily_workation_id is not None:
-            queryset = queryset.filter(daily_workation_id=daily_workation_id)
-        return queryset
-    
-    def create(self, validated_data):
-        if type(validated_data['start_time']) != datetime.time:
-            start_time = validated_data['start_data']
-            hours = int(start_time[:2])
-            minutes = int(start_time[2:4])
-            seconds = int(start_time[4:6])
-            validated_data['start_time'] = datetime.time(hours, minutes, seconds)
-            end_time = validated_data['end_time']
-            if end_time == "240000":
-                validated_data['end_time'] = datetime.time(23, 59, 59)
-            else:
-                hours = int(end_time[:2])
-                minutes = int(end_time[2:4])
-                seconds = int(end_time[4:6])
-                validated_data['end_time'] = datetime.time(hours, minutes, seconds)
-        return super().create(validated_data)
 
     def update(self, instance, validated_data):
         validated_data.pop('daily_workation', None)

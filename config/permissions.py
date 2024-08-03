@@ -31,6 +31,6 @@ class IsAuthenticatedAndReturnUser(IsAuthenticated):
         except Exception:
             return False    
 
-class IsOwner(BasePermission, IsAuthenticated):
+class IsOwner(IsAuthenticated):
     def has_object_permission(self, request, view, obj):
         return request.user == obj.user

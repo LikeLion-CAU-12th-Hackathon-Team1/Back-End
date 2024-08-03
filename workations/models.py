@@ -45,10 +45,6 @@ class Workation(models.Model):
         default = Workation_balance.balance,
     )
 
-    @property
-    def user(self):
-        return self.user
-
 class Workation_space(models.Model):
     workation = models.ForeignKey(Workation, on_delete=models.CASCADE)
     space = models.ForeignKey(Space, on_delete=models.CASCADE)
