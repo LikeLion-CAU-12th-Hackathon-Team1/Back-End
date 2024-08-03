@@ -11,6 +11,7 @@ import datetime as dt
 from datetime import date
 from django.views.decorators.http import require_GET
 from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
 
 # Create your views here.
 class ListCreateWorkation(generics.ListCreateAPIView):
@@ -117,8 +118,19 @@ class RetrieveUpdateDestroyTimeWorkation(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = TimeWorkationSerializer
     lookup_field = 'time_workation_id'
 
+    def delete(self, request, time_workation_id):
+        time_tasks = Time_task.objects.filter(time_workation_id=time_workation_id)
+        for time_task in time_tasks:
+            time_task.task.delete()
+        
+        try:
+            time_workation = get_object_or_404(Time_workation, time_workation_id=time_workation_id)
+            time_workation.delete()
+        except:
+            return Response(data='time_workation_id is wrong.', status=status.HTTP_404_NOT_FOUND)
+        return Response(data='Successfully deleted', status=status.HTTP_204_NO_CONTENT)
+
     def patch(self, request, time_workation_id):
-        # request.data['time_workation_id'] = time_workation_id
         instance = self.get_object()
         request.data['daily_workation'] = self.get_object().daily_workation.daily_workation_id
         
