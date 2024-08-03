@@ -3,8 +3,6 @@ from rest_framework.serializers import PrimaryKeyRelatedField
 from rest_framework.fields import ReadOnlyField, JSONField
 from .models import *
 from time_table import CreateTimeTable
-# from config.permissions import IsAuthenticatedAndReturnUser
-# from rest_framework.response import Response
 import datetime
 
 # workation-space 중간 테이블.
@@ -45,17 +43,20 @@ class WorkationSerializer(serializers.ModelSerializer):
 
         workation = Workation.objects.create(**validated_data)
 
+        # 생성한 워케이션과 입력 받은 선호 작업 공간, 휴식 스타일 매핑
         for space_data in spaces_data:
             Workation_space.objects.create(workation=workation, **space_data)
 
         for rest_data in rest_data:
             Workation_rest.objects.create(workation=workation, **rest_data)
 
+        # 챗 GPT로 기본 시간표 틀 생성
         time_table_creator = CreateTimeTable()
         base_time_table = time_table_creator.create_time_table(
             validated_data['start_sleep'], validated_data['end_sleep'],
             validated_data['work_style'], validated_data['work_purpose'])
 
+        # 워케이션 일정대로 날짜 별 일일 워케이션 객체 생성
         current_date = validated_data['start_date']
         end_date = validated_data['end_date']
         while current_date <= end_date:
@@ -71,9 +72,9 @@ class WorkationSerializer(serializers.ModelSerializer):
 
         return workation
     
+    # DateField로 저장하지만 프론트에 데이터를 전달할 때는 8자리 숫자 문자열로 전달
     def to_representation(self, instance):
         ret = super().to_representation(instance)
-        # 날짜 필드를 8자리 숫자 문자열로 변환
         ret['start_date'] = instance.start_date.strftime('%Y%m%d')
         ret['end_date'] = instance.end_date.strftime('%Y%m%d')
         return ret
@@ -88,13 +89,15 @@ class WorkationSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("End date must be later than start date.")
         return value
     
+    # validation 과정 수정 필요함
+    # exist 사용해서 검증하도록 수정
     def validate(self, validated_data):
         user = self.initial_data['user']
         workations = Workation.objects.filter(user=user)
         for workation in workations:
-            if workation.start_date <= validated_data['start_date'] < workation.end_date:
+            if workation.start_date <= validated_data['start_date'] <= workation.end_date:
                 raise serializers.ValidationError("Start date overlaps with existing workation.")
-            if workation.start_date < validated_data['end_date'] <= workation.end_date:
+            if workation.start_date <= validated_data['end_date'] <= workation.end_date:
                 raise serializers.ValidationError("End date overlaps with existing workation.")
             if validated_data['start_date'] <= workation.start_date and validated_data['end_date'] >= workation.end_date:
                 raise serializers.ValidationError("Date overlaps with existing workation.")
@@ -111,6 +114,9 @@ class DailyWorkationSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def create(self, validated_data):
+        # 시간 테이블을 입력 데이터로 받은 경우
+        # 시간 테이블을 생성
+        # bulk_create로 리팩토링 해야 함
         base_time_table = validated_data.pop('base_time_table', None)
         daily_workation = super().create(validated_data)
         if base_time_table:
@@ -148,6 +154,8 @@ class TaskSerializer(serializers.ModelSerializer):
         time_workation = validated_data.pop('time_workation')
         validated_data['daily_workation'] = time_workation.daily_workation
         task = super().create(validated_data)
+
+        # time-task 중간 테이블 연결
         time_task_data = {
             'task': task.task_id,
             'time_workation': time_workation.time_workation_id
