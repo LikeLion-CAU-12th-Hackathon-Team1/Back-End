@@ -4,6 +4,7 @@ from rest_framework.fields import ReadOnlyField, JSONField
 from .models import *
 from time_table import CreateTimeTable
 import datetime
+from django.db.models import Q
 
 # workation-space 중간 테이블.
 class WorkationSpaceSerializer(serializers.ModelSerializer):
@@ -98,13 +99,13 @@ class WorkationSerializer(serializers.ModelSerializer):
     def validate(self, validated_data):
         user = self.initial_data['user']
         workations = Workation.objects.filter(user=user)
-        for workation in workations:
-            if workation.start_date <= validated_data['start_date'] <= workation.end_date:
-                raise serializers.ValidationError("Start date overlaps with existing workation.")
-            if workation.start_date <= validated_data['end_date'] <= workation.end_date:
-                raise serializers.ValidationError("End date overlaps with existing workation.")
-            if validated_data['start_date'] <= workation.start_date and validated_data['end_date'] >= workation.end_date:
-                raise serializers.ValidationError("Date overlaps with existing workation.")
+        if workations.filter(Q(strat_date__lte=validated_data['start_date']) & Q(end_date__gte=validated_data['start_date'])):
+            raise serializers.ValidationError("Start date overlaps with existing workation.")
+        if workations.filter(Q(strat_date__lte=validated_data['end_date']) & Q(end_date__gte=validated_data['end_date'])):
+            raise serializers.ValidationError("Start date overlaps with existing workation.")
+        if workations.filter(Q(strat_date__gte=validated_data['start_date']) & Q(end_date__lte=validated_data['end_date'])):
+            raise serializers.ValidationError("Start date overlaps with existing workation.")
+
         return validated_data
     
 # 1일 단위 워케이션.
