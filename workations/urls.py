@@ -22,4 +22,5 @@ urlpatterns = [
     path('token/refresh/', TokenRefresh.as_view(), name='refresh_access_token'),
     path('rest/', WorkationRest.as_view(), name='sido_list_create'),
     path('space/', WorkationSpace.as_view(), name='sigg_list_create'),
+    path('timer/', timer, name='timer'),
 ]

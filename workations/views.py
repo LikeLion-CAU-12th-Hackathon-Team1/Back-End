@@ -9,6 +9,7 @@ from config.permissions import IsOwner
 from datetime import datetime
 import datetime as dt
 from datetime import date
+from datetime import timedelta
 from django.views.decorators.http import require_GET
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
@@ -238,3 +239,17 @@ class WorkationSpace(generics.ListCreateAPIView):
 
 class TokenRefresh(TokenRefreshView):
     pass
+
+
+# 추가
+def timer(request):
+    if request.method == 'GET':
+        now = datetime.now()
+        ten_minutes_from_now = (now + timedelta(minutes=10)).time()
+        matching_end_time_exists = Time_workation.objects.filter(end_time=ten_minutes_from_now).exists()
+
+        response_data = {
+            'exists': matching_end_time_exists
+        }
+        
+        return JsonResponse(response_data)
