@@ -264,7 +264,7 @@ def timer(request):
 
 
     now = datetime.now()
-    ten_minutes_from_now = (now + timedelta(minutes=10)).time()
+    ten_minutes_from_now = (now + timedelta(minutes=45)).time()
     matching_end_time_exists = Time_workation.objects.filter(
         daily_workation_id=daily_workation_id,
         end_time=ten_minutes_from_now
