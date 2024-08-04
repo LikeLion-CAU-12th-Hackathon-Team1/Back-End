@@ -75,7 +75,6 @@ class Kakao_callback(View):
 
             serialize_data = {
                 'kakao_id' : response_json.get('id'),
-                'name' : response_json.get('kakao_account').get('name'),
                 'email' : response_json.get('kakao_account').get('email')
             }
 
@@ -102,7 +101,6 @@ class Kakao_callback(View):
                     "refresh_token" : refresh_token,
                     "access_token" : access_token,
                     "user" : {
-                        "name" : user.name,
                         "nickname" : user.nickname,
                         "email" : user.email,
                         "profile" : user.profile
