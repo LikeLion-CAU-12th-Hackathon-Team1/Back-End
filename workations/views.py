@@ -253,14 +253,14 @@ class TokenRefresh(TokenRefreshView):
 
 
 # 추가
+@require_GET
 def timer(request):
-    if request.method == 'GET':
-        now = datetime.now()
-        ten_minutes_from_now = (now + timedelta(minutes=10)).time()
-        matching_end_time_exists = Time_workation.objects.filter(end_time=ten_minutes_from_now).exists()
+    now = datetime.now()
+    ten_minutes_from_now = (now + timedelta(minutes=10)).time()
+    matching_end_time_exists = Time_workation.objects.filter(end_time=ten_minutes_from_now).exists()
 
-        response_data = {
-            'exists': matching_end_time_exists
-        }
-        
-        return JsonResponse(response_data)
+    response_data = {
+        'exists': matching_end_time_exists
+    }
+    
+    return JsonResponse(response_data)
