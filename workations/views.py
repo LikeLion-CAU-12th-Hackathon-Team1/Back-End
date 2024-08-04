@@ -4,10 +4,8 @@ from .serializers import *
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
-from config.permissions import IsOwner
+from rest_framework.permissions import AllowAny
 from datetime import datetime
-import datetime as dt
 from datetime import date
 from datetime import timedelta
 from django.views.decorators.http import require_GET
@@ -100,10 +98,15 @@ class RetrieveUpdateDestroyDailyWorkation(generics.RetrieveUpdateDestroyAPIView)
         return Daily_workation.objects.filter(workation__user=self.request.user)
 
     def get(self, request, *args, **kwargs):
-        data = self.get_object()
-        workation = Workation.objects.get(workation_id=data.workation.workation_id)
-        serializer = DailyWorkationSerializer(data)
+        daily_workation = self.get_object()
+        serializer = DailyWorkationSerializer(daily_workation)
+        daily_workations = Daily_workation.objects.filter(workation_id=daily_workation.workation_id)
+        object_list = list(daily_workations)
+        day = object_list.index(daily_workation)
+        workation = Workation.objects.get(workation_id=daily_workation.workation.workation_id)
+
         data = serializer.data
+        data['day'] = day + 1
         data['sigg'] = WorkationSerializer(workation).data['sigg']
         return Response(data)
     
@@ -169,8 +172,14 @@ class TodayDailyWorkation(generics.ListAPIView):
             return Response(data='there is no schedule today', status=status.HTTP_404_NOT_FOUND)
     
         serializer = DailyWorkationSerializer(daily_workation)
+        daily_workations = Daily_workation.objects.filter(workation_id=daily_workation.workation_id)
+        object_list = list(daily_workations)
+        day = object_list.index(daily_workation)
+        workation = Workation.objects.get(workation_id=daily_workation.workation.workation_id)
+
         data = serializer.data
-        data['sigg'] = WorkationSerializer(daily_workation.workation).data['sigg']
+        data['day'] = day + 1
+        data['sigg'] = WorkationSerializer(workation).data['sigg']
         return Response(data)
 
 class DailyWorkationTaskList(generics.ListCreateAPIView):
@@ -230,10 +239,12 @@ def work_rest_graph(request, daily_workation_id):
         })
 
 class WorkationRest(generics.ListCreateAPIView):
+    permission_classes = [AllowAny]
     queryset = Workation_rest.objects.all()
     serializer_class = RestSerializer
 
 class WorkationSpace(generics.ListCreateAPIView):
+    permission_classes = [AllowAny]
     queryset = Workation_space.objects.all()
     serializer_class = SpaceSerializer
 

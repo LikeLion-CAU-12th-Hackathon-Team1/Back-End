@@ -92,8 +92,8 @@ class CreateTimeTable():
         response_msg = response.choices[0].message.content
         data = json.loads(response_msg)
         schedule_list = data['schedule']
-        print(schedule_list)
+        # print(schedule_list)
         return schedule_list
 
-ctt = CreateTimeTable()
-ctt.create_time_table('040000', '110000', 2, 1)
+# ctt = CreateTimeTable()
+# ctt.create_time_table('040000', '110000', 2, 1)
