@@ -7,6 +7,7 @@ from .views import *
 urlpatterns = [
     path('', ListCreateWorkation.as_view(), name='workation_list_create'),
     path('today/', TodayDailyWorkation.as_view(), name='today_workation'),
+    path('closest/', ClosestFutureWorkation.as_view(), name='closest_future_workation'),
     path('<int:workation_id>/', RetrieveUpdateDestroyWorkation.as_view(), name='workation_retrieve_update_destroy'),
     path('<int:workation_id>/daily/', DailyWorkationGenericAPIView.as_view(), name='daily_workation_list_create'),
     path('daily/<int:daily_workation_id>/', RetrieveUpdateDestroyDailyWorkation.as_view(), name='daily_workation_retrieve_update_destroy'),

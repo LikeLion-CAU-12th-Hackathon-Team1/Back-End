@@ -182,6 +182,20 @@ class DailyWorkationTaskList(generics.ListCreateAPIView):
         serializer = TaskSerializer(tasks, many=True)
         return Response(serializer.data)
 
+class ClosestFutureWorkation(generics.RetrieveAPIView):
+    serializer_class = WorkationSerializer
+
+    def get_queryset(self):
+        return Workation.objects.filter(user=self.request.user)
+    
+    def get(self):
+        workations = self.get_queryset().filter(end_date__gte=datetime.today())
+        closest_workation = workations.last()
+        if closest_workation:
+            serializer = self.get_serializer(closest_workation)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response({'detail' : 'No future workations found'}, status=status.HTTP_404_NOT_FOUND)
+
 @require_GET
 def work_rest_graph(request, daily_workation_id):
     schedules = Time_workation.objects.filter(daily_workation=daily_workation_id)
