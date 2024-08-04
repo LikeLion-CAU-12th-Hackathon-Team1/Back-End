@@ -255,9 +255,11 @@ class TokenRefresh(TokenRefreshView):
 # 추가
 def timer(request):
     if request.method == 'GET':
+        queryset = Daily_workation.objects.filter(workation__user=request.user)
+        
         now = datetime.now()
-        ten_minutes_from_now = (now + timedelta(minutes=10)).time()
-        matching_end_time_exists = Time_workation.objects.filter(end_time=ten_minutes_from_now).exists()
+        ten_minutes_from_now = (now + timedelta(minutes=40)).time()
+        matching_end_time_exists = queryset.filter(Q(end_time__lte=ten_minutes_from_now)).exists()
 
         response_data = {
             'exists': matching_end_time_exists
