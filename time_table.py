@@ -1,83 +1,105 @@
 from config.settings import get_secret
 import openai
-from openai import OpenAI, api_key
 import json
 
 OPEN_AI_API_KEY = get_secret("OPEN_AI_API_KEY")
 
 class CreateTimeTable():
     def __init__(self):
-        self.client = OpenAI(api_key=OPEN_AI_API_KEY)
+        self.client = openai.OpenAI(api_key=OPEN_AI_API_KEY)
 
     def create_time_table(self, sleep_start_time, sleep_end_time, work_style, work_rest_balance):
-        prompt = f"""
-        You are a time management expert. Based on the following inputs:
-        Sleep start time: {sleep_start_time}
-        Sleep start at 2400 means that the service user goes to bed at 00:00.
-        Sleep end time: {sleep_end_time}
-        Sleep end at 0600 means that the service user wakes up at 06:00.
-        From sleep start time to sleep end time is sleeping time. So you must not fill the time during sleep.
-        Work start time: {work_style}
-        If work start time is 1, you should start work at 080000.
-        If work start time is 2, you should start work at 130000.
-        If work start time is 3, you should start work at 160000.
-        Work/rest balance: {work_rest_balance}
-        If work/rest balance is 1, total work time should be 8 hours and total rest time should be 6 hours.
-        If work/rest balance is 2, total work time should be 7 hours and total rest time should be 7 hours.
-        If work/rest balance is 3, total work time should be 6 hours and total rest time should be 8 hours.
-        Both total work time and rest time must be exactly same with the input data.
-        The schedule of the timetable is always set on time.
-        The schedule of the timetable do not have to fill the whole day.
+        prompt =f"""
+        You are a time management expert.
+        You should organize and provide a timetable suitable for the user's situation.
+        The timetable consists of a total of 24 hours from 00:00:00 to 23:59:59.
+        The schedule for constructing the timetable should not be out of this range.
+        The timetable you construct is per day. You don't have to consider the next day.
 
-        Sleeping time is from Sleep start time to Sleep end time. Do not schedule any activities during this time.
-        User will sleep during Sleeping time. So sleeping time must be empty. There will be no work or rest during this time.
-        Both sum of work time and rest time must be sams as the total work time and total rest time.
-        Create a daily schedule with alternating work and rest periods.
-        Work and rest periods could alternate.
-        
-        The sum of working and resting times should be exactly the same as the total work time and total rest time.
-        Do not schedule any work periods from sleep end time until the start of the work period.
-        Both start_time and end_time must be in HH0000 format.
-        Do not response with start_time and end_time as null values.
-        Do not take into account the general patterns of life in real life; base the schedule solely on the input data.
-        Start time's minutes and seconds are always 00.
-        End time's minutes and seconds are always 00.
+        The timetable consists of four types of schedules: 'work', 'rest', 'sleep', and 'blank'.
+        'work' is a time to work.
+        The timetable should include at least two schedules corresponding to 'work'.
+        'rest' is a break time.
+        The timetable should include at least two schedules corresponding to 'rest'.
+        'Sleep' is bedtime.
+        'blank' is not 'work', it is not 'rest', it is not 'sleep'.
+        The remaining time, subtracting the time corresponding to 'work', 'rest', and 'sleep' from 24 hours, corresponds to 'blank'.
+        If the sum of 'work', 'rest', and 'sleep' is 24 hours, there may be no schedule corresponding to 'blank' in the timetable.
 
-        Make a schedule that satisfies the input dataset.
-        The result schedule is from 000000 to 240000.
-        Example:
-        - 05:00:00-13:00:00 Sleeping
-        - 13:00:00-14:00:00 Work
-        - ...
-        - 24:00:00-02:00:00 Work
-        - 02:00:00-05:00:00 est
-        should be:
-        - 00:00:00-02:00:00 Work
-        - 02:00:00-05:00:00 Rest
-        - 05:00:00-13:00:00 Sleeping
-        - 13:00:00-14:00:00 Work
-        ...
-        - 22:00:00-24:00:00 Rest
 
-        Example Input:
-        - Sleep start time: 2400
-        - Sleep end time: 0600
-        - Start time: 0800
-        - Total work hours: 8
-        - Total rest hours: 8
+        Sleep_end_time is the time to end bedtime. The input format is HH.
+        If '00' or '24' is inputted as sleep_end_time, it is processed as '235959'.
+        sleep_start_time is the time to start bedtime. The input format is HH.
+        If '00' or '24' is inputted as sleep_start_time, it is processed as '00'.
 
-        Output Format: JSON, sort = (1: Work, 2: Rest)
-        Return a list of objects with the following.
-        Output response time must be "HH0000" format.
-        Example Output:
-        "schedule": 
-        [
-            {{ "sort": 1, "start_time": "080000", "end_time": "110000" }},
-            {{ "sort": 2, "start_time": "110000", "end_time": "140000" }},
-            {{ "sort": 1, "start_time": "140000", "end_time": "170000" }},
-            ...
-            {{ "sort": 2, "start_time": "230000", "end_time": "240000" }}
-        ]
+        If sleep_start_time < sleep_end_time, the bedtime is sleep_end_time - sleep_start_time.
+        For example, if sleep_start_time is '02' and sleep_end_time is '10', the bedtime is 10 - 02 = 08 for 8 hours.
+        If sleep_start_time > sleep_end_time, the bedtime is (24 - sleep_start_time) + sleep_end_time.
+        For example, if sleep_start_time is '23' and sleep_end_time is '07', the bedtime is (24-23) + 07.
+
+
+        work_style is an item that determines the time to start 'work' for the first time.
+        If work_style is 1, start 'work' for the first time at 08:00:00.
+        If work_style is 2, start 'work' for the first time at 13:00:00.
+        If work_style is 3, start 'work' for the first time at 16:00:00.
+
+        work_rest_balance is an item that determines the total time of 'work' and the total time of 'rest'.
+        If work_rest_balance is 1, the total time of 'work' is 7 hours, and the total time of 'rest' is 4 hours.
+        If work_rest_balance is 2, the total time of 'work' is 5 hours, and the total time of 'rest' is 5 hours.
+        If work_rest_balance is 3, the total time of 'work' is 4 hours, and the total time of 'rest' is 7 hours.
+
+
+        Input Example 1)
+        sleep_start_time : '00'
+        sleep_end_time : '07'
+        work_style : 1
+        work_rest_balance : 2
+
+        Timeline Example 1)
+        00:00:00 - 07:00:00 sleep
+        07:00:00 - 08:00:00 blank
+        08:00:00 - 11:00:00 work
+        11:00:00 - 13:00:00 rest
+        13:00:00 - 15:00:00 work
+        15:00:00 - 18:00:00 rest
+        18:00:00 - 23:59:59 blank
+
+        Output example 1)
+        Output format: json, sort = (1: work, 2: rest)
+        Schedule corresponding to 'blank' and 'rest' are not included in json.
+        The time format of the output must be HH0000 is equal to HH:00:00.
+        The timetable should not have the time format of HHMM00 or HHMMSS or HH00SS.
+        However, 235959 or 23:59:59 is exceptionally acceptable.
+
+        "schedule":[
+        {{ "sort": 1, "start_time": "080000", "end_time": "110000" }},
+        {{ "sort": 2, "start_time": "110000", "end_time": "130000" }},
+        {{ "sort": 1, "start_time": "130000", "end_time": "150000" }},
+        {{ "sort": 2, "start_time": "150000", "end_time": "180000" }}]
+
+
+        Input Example 2)
+        sleep_start_time : '04'
+        sleep_end_time : '11'
+        work_style : 2
+        work_rest_balance : 3
+
+        Timeline Example 2)
+        00:00:00 - 04:00:00 rest
+        04:00:00 - 11:00:00 sleep
+        11:00:00 - 13:00:00 blank
+        13:00:00 - 15:00:00 work
+        15:00:00 - 18:00:00 rest
+        18:00:00 - 20:00:00 work
+        20:00:00 - 23:59:59 blank
+
+        Output example 2)
+
+        "schedule":[
+        {{ "sort": 2, "start_time": "000000", "end_time": "040000" }},
+        {{ "sort": 1, "start_time": "140000", "end_time": "150000" }},
+        {{ "sort": 2, "start_time": "150000", "end_time": "180000" }},
+        {{ "sort": 1, "start_time": "180000", "end_time": "200000" }}]
         """
 
         response = self.client.chat.completions.create(
@@ -92,8 +114,8 @@ class CreateTimeTable():
         response_msg = response.choices[0].message.content
         data = json.loads(response_msg)
         schedule_list = data['schedule']
-        # print(schedule_list)
+        print(schedule_list)
         return schedule_list
 
-# ctt = CreateTimeTable()
-# ctt.create_time_table('040000', '110000', 2, 1)
+time_table_creator = CreateTimeTable()
+time_table_creator.create_time_table('02', '13', 2, 3)
