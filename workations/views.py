@@ -4,11 +4,10 @@ from .serializers import *
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated, AllowAny
-from config.permissions import IsOwner
+from rest_framework.permissions import AllowAny
 from datetime import datetime
-import datetime as dt
 from datetime import date
+from datetime import timedelta
 from django.views.decorators.http import require_GET
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
@@ -140,7 +139,7 @@ class RetrieveUpdateDestroyTimeWorkation(generics.RetrieveUpdateDestroyAPIView):
         instance = self.get_object()
         request.data['daily_workation'] = self.get_object().daily_workation.daily_workation_id
         
-        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer = TimeWorkationSerializer(instance, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -172,7 +171,6 @@ class TodayDailyWorkation(generics.ListAPIView):
         except Daily_workation.DoesNotExist:
             return Response(data='there is no schedule today', status=status.HTTP_404_NOT_FOUND)
     
-        daily_workation = self.get_object()
         serializer = DailyWorkationSerializer(daily_workation)
         daily_workations = Daily_workation.objects.filter(workation_id=daily_workation.workation_id)
         object_list = list(daily_workations)
@@ -252,3 +250,17 @@ class WorkationSpace(generics.ListCreateAPIView):
 
 class TokenRefresh(TokenRefreshView):
     pass
+
+
+# 추가
+@require_GET
+def timer(request):
+    now = datetime.now()
+    ten_minutes_from_now = (now + timedelta(minutes=10)).time()
+    matching_end_time_exists = Time_workation.objects.filter(end_time=ten_minutes_from_now).exists()
+
+    response_data = {
+        'exists': matching_end_time_exists
+    }
+    
+    return JsonResponse(response_data)
