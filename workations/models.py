@@ -46,7 +46,7 @@ class Workation(models.Model):
     )
 
     class Meta:
-        ordering = ['start_date', reversed=True]
+        ordering = ['-start_date']
 
 class Workation_space(models.Model):
     workation = models.ForeignKey(Workation, on_delete=models.CASCADE)
