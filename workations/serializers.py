@@ -270,7 +270,6 @@ class TimeWorkatoinUpdateSerializer(serializers.ModelSerializer):
             serializers.ValidationError("End time overlaps with existing time")
         return value
     
-    def validate
 
 class TodayWorkationSerializer(serializers.ModelSerializer):
     class Meta:
