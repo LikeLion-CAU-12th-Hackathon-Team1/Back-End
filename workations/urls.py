@@ -19,6 +19,7 @@ urlpatterns = [
     path('daily/time/task/<int:task_id>/', RetrieveUpdateDestroyTask.as_view(), name='task_retrieve_update_destroy'),
     path('daily/<int:daily_workation_id>/todolist/', DailyWorkationTaskList.as_view(), name='daily_workation_todo_list'),
     path('daily/<int:daily_workation_id>/graph/', work_rest_graph, name='daily_workation_graph'),
+    path('token/refresh/', TokenRefresh.as_view(), name='refresh_access_token'),
     path('rest/', WorkationRest.as_view(), name='sido_list_create'),
     path('space/', WorkationSpace.as_view(), name='sigg_list_create'),
 ]

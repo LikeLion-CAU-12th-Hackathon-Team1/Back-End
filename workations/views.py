@@ -12,6 +12,7 @@ from datetime import date
 from django.views.decorators.http import require_GET
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
+from rest_framework_simplejwt.views import TokenRefreshView
 
 # Create your views here.
 class ListCreateWorkation(generics.ListCreateAPIView):
@@ -234,3 +235,6 @@ class WorkationRest(generics.ListCreateAPIView):
 class WorkationSpace(generics.ListCreateAPIView):
     queryset = Workation_space.objects.all()
     serializer_class = SpaceSerializer
+
+class TokenRefresh(TokenRefreshView):
+    pass
