@@ -45,6 +45,9 @@ class Workation(models.Model):
         default = Workation_balance.balance,
     )
 
+    class Meta:
+        ordering = ['start_date']
+
 class Workation_space(models.Model):
     workation = models.ForeignKey(Workation, on_delete=models.CASCADE)
     space = models.ForeignKey(Space, on_delete=models.CASCADE)
@@ -65,6 +68,9 @@ class Daily_workation(models.Model):
     @property
     def user(self):
         return self.workation.user
+    
+    class Meta:
+        ordering = ['date']
 
 # 시간별
 class Time_workation_sort(models.IntegerChoices):
