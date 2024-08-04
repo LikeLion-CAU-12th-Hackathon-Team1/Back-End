@@ -4,10 +4,8 @@ from .serializers import *
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated, AllowAny
-from config.permissions import IsOwner
+from rest_framework.permissions import AllowAny
 from datetime import datetime
-import datetime as dt
 from datetime import date
 from django.views.decorators.http import require_GET
 from django.http import JsonResponse
@@ -172,7 +170,6 @@ class TodayDailyWorkation(generics.ListAPIView):
         except Daily_workation.DoesNotExist:
             return Response(data='there is no schedule today', status=status.HTTP_404_NOT_FOUND)
     
-        daily_workation = self.get_object()
         serializer = DailyWorkationSerializer(daily_workation)
         daily_workations = Daily_workation.objects.filter(workation_id=daily_workation.workation_id)
         object_list = list(daily_workations)
