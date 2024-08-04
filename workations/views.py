@@ -139,7 +139,7 @@ class RetrieveUpdateDestroyTimeWorkation(generics.RetrieveUpdateDestroyAPIView):
         instance = self.get_object()
         request.data['daily_workation'] = self.get_object().daily_workation.daily_workation_id
         
-        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer = TimeWorkationSerializer(instance, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
