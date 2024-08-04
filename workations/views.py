@@ -258,7 +258,7 @@ def timer(request):
         queryset = Daily_workation.objects.filter(workation__user=request.user)
         
         now = datetime.now()
-        ten_minutes_from_now = (now + timedelta(minutes=40)).time()
+        ten_minutes_from_now = (now + timedelta(minutes=37)).time()
         matching_end_time_exists = queryset.filter(Q(end_time__lte=ten_minutes_from_now)).exists()
 
         response_data = {
