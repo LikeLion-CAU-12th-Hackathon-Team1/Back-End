@@ -172,9 +172,16 @@ class TodayDailyWorkation(generics.ListAPIView):
         except Daily_workation.DoesNotExist:
             return Response(data='there is no schedule today', status=status.HTTP_404_NOT_FOUND)
     
+        daily_workation = self.get_object()
         serializer = DailyWorkationSerializer(daily_workation)
+        daily_workations = Daily_workation.objects.filter(workation_id=daily_workation.workation_id)
+        object_list = list(daily_workations)
+        day = object_list.index(daily_workation)
+        workation = Workation.objects.get(workation_id=daily_workation.workation.workation_id)
+
         data = serializer.data
-        data['sigg'] = WorkationSerializer(daily_workation.workation).data['sigg']
+        data['day'] = day + 1
+        data['sigg'] = WorkationSerializer(workation).data['sigg']
         return Response(data)
 
 class DailyWorkationTaskList(generics.ListCreateAPIView):

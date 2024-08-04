@@ -98,7 +98,7 @@ class WorkationSerializer(serializers.ModelSerializer):
         user = self.initial_data['user']
         workations = Workation.objects.filter(user=user)
 
-        if self.initial_data['start_date'] > value:
+        if self.initial_data['start_date'] > self.initial_data['end_date']:
             raise serializers.ValidationError("End date must be later than start date.")
         if workations.filter(Q(start_date__lte=value) & Q(end_date__gte=value)).exists():
             raise serializers.ValidationError("Start date overlaps with existing workation.")
