@@ -99,11 +99,11 @@ class WorkationSerializer(serializers.ModelSerializer):
     def validate(self, validated_data):
         user = self.initial_data['user']
         workations = Workation.objects.filter(user=user)
-        if workations.filter(Q(strat_date__lte=validated_data['start_date']) & Q(end_date__gte=validated_data['start_date'])):
+        if workations.filter(Q(start_date__lte=validated_data['start_date']) & Q(end_date__gte=validated_data['start_date'])):
             raise serializers.ValidationError("Start date overlaps with existing workation.")
-        if workations.filter(Q(strat_date__lte=validated_data['end_date']) & Q(end_date__gte=validated_data['end_date'])):
+        if workations.filter(Q(start_date__lte=validated_data['end_date']) & Q(end_date__gte=validated_data['end_date'])):
             raise serializers.ValidationError("Start date overlaps with existing workation.")
-        if workations.filter(Q(strat_date__gte=validated_data['start_date']) & Q(end_date__lte=validated_data['end_date'])):
+        if workations.filter(Q(start_date__gte=validated_data['start_date']) & Q(end_date__lte=validated_data['end_date'])):
             raise serializers.ValidationError("Start date overlaps with existing workation.")
 
         return validated_data
