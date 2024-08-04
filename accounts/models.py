@@ -4,7 +4,7 @@ from django.contrib.auth.models import AbstractBaseUser
 class User(AbstractBaseUser):
     id = models.AutoField(primary_key=True)
     kakao_id = models.CharField(max_length=15, null=False, unique=True)
-    name = models.CharField(max_length=10)
+    name = models.CharField(max_length=10, null=False, blank=False)
     nickname = models.CharField(max_length=10)
     email = models.CharField(max_length=100, null=True, unique=True)
     profile = models.CharField(max_length=512, null=True, blank=True)
