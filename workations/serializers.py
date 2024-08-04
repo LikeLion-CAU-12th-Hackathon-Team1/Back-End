@@ -38,16 +38,20 @@ class WorkationSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def create(self, validated_data):
-        spaces_data = validated_data.pop('workation2space', [])
-        rest_data = validated_data.pop('workation2rest', [])
+        space_datas = validated_data.pop('workation2space', [])
+        if len(space_datas) == 0:
+            raise serializers.ValidationError('space type required')
+        rest_datas = validated_data.pop('workation2rest', [])
+        if len(rest_datas) == 0:
+            raise serializers.ValidationError('rest type required')
 
         workation = Workation.objects.create(**validated_data)
 
         # 생성한 워케이션과 입력 받은 선호 작업 공간, 휴식 스타일 매핑
-        for space_data in spaces_data:
+        for space_data in space_datas:
             Workation_space.objects.create(workation=workation, **space_data)
 
-        for rest_data in rest_data:
+        for rest_data in rest_datas:
             Workation_rest.objects.create(workation=workation, **rest_data)
 
         # 챗 GPT로 기본 시간표 틀 생성
