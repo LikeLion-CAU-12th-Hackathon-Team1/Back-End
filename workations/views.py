@@ -255,9 +255,20 @@ class TokenRefresh(TokenRefreshView):
 # 추가
 @require_GET
 def timer(request):
+    today = datetime.now().date()
+    try:
+        daily_workation = Daily_workation.objcets.get(date=today)
+        daily_workation_id = daily_workation.daily_workation_id
+    except Daily_workation.DoesNotExist:
+        return JsonResponse({'exist':False})
+
+
     now = datetime.now()
     ten_minutes_from_now = (now + timedelta(minutes=10)).time()
-    matching_end_time_exists = Time_workation.objects.filter(end_time=ten_minutes_from_now).exists()
+    matching_end_time_exists = Time_workation.objects.filter(
+        daily_workation_id=daily_workation_id,
+        end_time=ten_minutes_from_now
+        ).exists()
 
     response_data = {
         'exists': matching_end_time_exists
