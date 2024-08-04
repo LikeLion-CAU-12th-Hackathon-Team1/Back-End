@@ -195,11 +195,11 @@ class ClosestFutureWorkation(generics.RetrieveAPIView):
             serializer = self.get_serializer(closest_workation)
             data = serializer.data
 
-            daily_workations = Daily_workation.objects.filter(workation=closest_workation.workation_id)
+            daily_workations = Daily_workation.objects.filter(workation_id=closest_workation.workation_id)
             daily_workation_list = DailyWorkationSerializer(daily_workations, many=True).data
             daily_workation_ids = [{'daily_workation_id' : item['daily_workation_id']} for item in daily_workation_list]
             data['daily_workation_list'] = daily_workation_ids
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(data, status=status.HTTP_200_OK)
         return Response({'detail' : 'No future workations found'}, status=status.HTTP_404_NOT_FOUND)
 
 @require_GET
