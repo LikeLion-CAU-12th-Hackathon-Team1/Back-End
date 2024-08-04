@@ -45,9 +45,8 @@ class Workation(models.Model):
         default = Workation_balance.balance,
     )
 
-    @property
-    def owner(self):
-        return self.user
+    class Meta:
+        ordering = ['-start_date']
 
 class Workation_space(models.Model):
     workation = models.ForeignKey(Workation, on_delete=models.CASCADE)
@@ -67,8 +66,11 @@ class Daily_workation(models.Model):
     memo = models.TextField(blank=True)
 
     @property
-    def owner(self):
+    def user(self):
         return self.workation.user
+    
+    class Meta:
+        ordering = ['date']
 
 # 시간별
 class Time_workation_sort(models.IntegerChoices):
@@ -83,7 +85,7 @@ class Time_workation(models.Model):
     end_time = models.TimeField()
 
     @property
-    def owner(self):
+    def user(self):
         return self.daily_workation.workation.user
 
 # 할 일
@@ -101,7 +103,7 @@ class Task(models.Model):
     )
 
     @property
-    def owner(self):
+    def user(self):
         return self.daily_workation.workation.user
 
 class Time_task(models.Model):

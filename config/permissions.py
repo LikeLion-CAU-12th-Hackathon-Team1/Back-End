@@ -31,12 +31,6 @@ class IsAuthenticatedAndReturnUser(IsAuthenticated):
         except Exception:
             return False    
 
-# class IsOwnerOrReadOnly(BasePermission):
-#     def has_object_permission(self, request, view, obj):
-#         if request.method in SAFE_METHODS:
-#             return True
-#         return request.user == obj.owner
-
-class IsOwner(BasePermission):
+class IsOwner(IsAuthenticated):
     def has_object_permission(self, request, view, obj):
-        return request.user == obj.owner
+        return request.user == obj.user

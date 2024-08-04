@@ -11,55 +11,43 @@ import datetime as dt
 from datetime import date
 from django.views.decorators.http import require_GET
 from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
 
 # Create your views here.
 class ListCreateWorkation(generics.ListCreateAPIView):
-    queryset = Workation.objects.all()
     serializer_class = WorkationSerializer
+
+    def get_queryset(self):
+        return Workation.objects.filter(user=self.request.user)
 
     def post(self, request):
         request.data['user'] = request.user.id
-        start = request.data['start_date']
-        end = request.data['end_date']
-        request.data['start_date'] = dt.date(int(start[0:4]), int(start[4:6]), int(start[6:8]))
-        request.data['end_date'] = dt.date(int(end[0:4]), int(end[4:6]), int(end[6:8]))
         serializer = WorkationSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    def get(self, request):
-        workations = Workation.objects.filter(user=request.user.id)
-        serializer = WorkationSerializer(workations, many=True)
-        return Response(serializer.data)
 
 class DailyWorkationGenericAPIView(generics.ListCreateAPIView):
-    queryset = Daily_workation.objects.all()
     serializer_class = DailyWorkationSerializer
 
+    def get_queryset(self):
+        return Daily_workation.objects.filter(workation__user=self.request.user).filter(workation_id=self.kwargs['workation_id'])
+
 class TimeWorkationGenericAPIView(generics.ListCreateAPIView):
-    queryset = Time_workation.objects.all()
     serializer_class = TimeWorkationSerializer
+    lookup_field = 'daily_workation_id'
+
+    def get_object(self):
+        return Daily_workation.objects.get(daily_workation_id=self.kwargs['daily_workation_id'])
     
     def get(self, request, daily_workation_id):
-        time_workations = Time_workation.objects.filter(daily_workation=daily_workation_id)
+        time_workations = Time_workation.objects.filter(daily_workation_id=self.get_object().daily_workation_id)
         serializer = TimeWorkationSerializer(time_workations, many=True)
         return Response(serializer.data)
     
     def post(self, request, daily_workation_id):
         request.data['daily_workation'] = daily_workation_id
-        time = request.data.get('start_time', None)
-        if time is None:
-            return Response(data='start_time is required', status=status.HTTP_400_BAD_REQUEST)
-        request.data['start_time'] = dt.time(int(time[0:2]), int(time[2:4]), int(time[4:6]))
-        time = request.data.get('end_time', None)
-        if time is None:
-            return Response(data='end_time is required', status=status.HTTP_400_BAD_REQUEST)
-        if request.data['end_time'] == '240000':
-            request.data['end_time'] = dt.time(23, 59, 59)
-        else:   
-            request.data['end_time'] = dt.time(int(time[0:2]), int(time[2:4]), int(time[4:6]))
         serializer = TimeWorkationSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -67,9 +55,14 @@ class TimeWorkationGenericAPIView(generics.ListCreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class TaskGenericAPIView(generics.ListCreateAPIView):
-    queryset = Task.objects.all()
     serializer_class = TaskSerializer
-    permission_classes = [IsOwner]
+    queryset = Task.objects.all()
+
+    def get(self, request, time_workation_id):
+        time_tasks = Time_task.objects.filter(time_workation=time_workation_id)
+        tasks = [time_task.task for time_task in time_tasks]
+        serializer = TaskSerializer(tasks, many=True)
+        return Response(serializer.data)
 
     def post(self, request, time_workation_id):
         request.data['time_workation'] = time_workation_id
@@ -79,24 +72,18 @@ class TaskGenericAPIView(generics.ListCreateAPIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class TimeTaskGenericAPIView(generics.ListCreateAPIView):
-    queryset = Time_task.objects.all()
-    serializer_class = TimeTaskSerializer
-
-    def get(self, request, time_workation_id):
-        time_tasks = Time_task.objects.filter(time_workation=time_workation_id)
-        serializer = TimeTaskSerializer(time_tasks, many=True)
-        return Response(serializer.data)
-
 class RetrieveUpdateDestroyWorkation(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Workation.objects.all()
     serializer_class = WorkationSerializer
     lookup_field = 'workation_id'
 
+    def get_queryset(self):
+        return Workation.objects.filter(user=self.request.user)
+
     def get(self, request, workation_id):
-        workation = Workation.objects.get(workation_id=workation_id)
+        workation = self.get_object()
         serializer = WorkationSerializer(workation)
         data = serializer.data
+
         daily_workations = Daily_workation.objects.filter(workation=workation_id)
         daily_workation_list = DailyWorkationSerializer(daily_workations, many=True).data
         daily_workation_ids = [{'daily_workation_id' : item['daily_workation_id']} for item in daily_workation_list]
@@ -104,12 +91,14 @@ class RetrieveUpdateDestroyWorkation(generics.RetrieveUpdateDestroyAPIView):
         return Response(data)
 
 class RetrieveUpdateDestroyDailyWorkation(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Daily_workation.objects.all()
     serializer_class = DailyWorkationSerializer
     lookup_field = 'daily_workation_id'
 
-    def get(self, request, daily_workation_id):
-        data = Daily_workation.objects.get(daily_workation_id=daily_workation_id)
+    def get_queryset(self):
+        return Daily_workation.objects.filter(workation__user=self.request.user)
+
+    def get(self, request, *args, **kwargs):
+        data = self.get_object()
         workation = Workation.objects.get(workation_id=data.workation.workation_id)
         serializer = DailyWorkationSerializer(data)
         data = serializer.data
@@ -129,15 +118,22 @@ class RetrieveUpdateDestroyTimeWorkation(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = TimeWorkationSerializer
     lookup_field = 'time_workation_id'
 
+    def delete(self, request, time_workation_id):
+        time_tasks = Time_task.objects.filter(time_workation_id=time_workation_id)
+        for time_task in time_tasks:
+            time_task.task.delete()
+        
+        try:
+            time_workation = get_object_or_404(Time_workation, time_workation_id=time_workation_id)
+            time_workation.delete()
+        except:
+            return Response(data='time_workation_id is wrong.', status=status.HTTP_404_NOT_FOUND)
+        return Response(data='Successfully deleted', status=status.HTTP_204_NO_CONTENT)
+
     def patch(self, request, time_workation_id):
-        request.data['time_workation_id'] = time_workation_id
-        start_time = request.data.get('start_time', None)
-        if start_time:
-            request.data['start_time'] = dt.time(int(start_time[0:2]), int(start_time[2:4]), int(start_time[4:6]))
-        end_time = request.data.get('end_time', None)
-        if end_time:
-            request.data['end_time'] = dt.time(int(end_time[0:2]), int(end_time[2:4]), int(end_time[4:6]))
         instance = self.get_object()
+        request.data['daily_workation'] = self.get_object().daily_workation.daily_workation_id
+        
         serializer = self.get_serializer(instance, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -158,36 +154,53 @@ class RetrieveUpdateDestroyTask(generics.RetrieveUpdateDestroyAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class TodayDailyWorkation(generics.ListAPIView):
-    queryset = Daily_workation.objects.all()
     serializer_class = DailyWorkationSerializer
+
+    def get_queryset(self):
+        return Daily_workation.objects.filter(workation__user=self.request.user)
 
     def get(self, request):
         today = date.today()
         try:
-            daily_workation = Daily_workation.objects.get(date=today)
+            daily_workation = self.get_queryset().get(date=today)
         except Daily_workation.DoesNotExist:
             return Response(data='there is no schedule today', status=status.HTTP_404_NOT_FOUND)
     
         serializer = DailyWorkationSerializer(daily_workation)
-        serializer.data['sigg'] = WorkationSerializer(daily_workation.workation).data['sigg']
-        return Response(serializer.data)
-
-class WorkationRest(generics.ListCreateAPIView):
-    queryset = Workation_rest.objects.all()
-    serializer_class = RestSerializer
-
-class WorkationSpace(generics.ListCreateAPIView):
-    queryset = Workation_space.objects.all()
-    serializer_class = SpaceSerializer
+        data = serializer.data
+        data['sigg'] = WorkationSerializer(daily_workation.workation).data['sigg']
+        return Response(data)
 
 class DailyWorkationTaskList(generics.ListCreateAPIView):
-    queryset = Task.objects.all()
     serializer_class = TaskSerializer
 
+    def get_queryset(self):
+        return Task.objects.filter(daily_workation__workation__user=self.request.user)
+
     def get(self, request, daily_workation_id):
-        tasks = Task.objects.filter(daily_workation=daily_workation_id)
+        tasks = self.get_queryset().filter(daily_workation=daily_workation_id)
         serializer = TaskSerializer(tasks, many=True)
         return Response(serializer.data)
+
+class ClosestFutureWorkation(generics.RetrieveAPIView):
+    serializer_class = WorkationSerializer
+
+    def get_queryset(self):
+        return Workation.objects.filter(user=self.request.user)
+    
+    def get(self, request):
+        workations = self.get_queryset().filter(end_date__gte=datetime.today())
+        closest_workation = workations.last()
+        if closest_workation:
+            serializer = self.get_serializer(closest_workation)
+            data = serializer.data
+
+            daily_workations = Daily_workation.objects.filter(workation=closest_workation.workation_id)
+            daily_workation_list = DailyWorkationSerializer(daily_workations, many=True).data
+            daily_workation_ids = [{'daily_workation_id' : item['daily_workation_id']} for item in daily_workation_list]
+            data['daily_workation_list'] = daily_workation_ids
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response({'detail' : 'No future workations found'}, status=status.HTTP_404_NOT_FOUND)
 
 @require_GET
 def work_rest_graph(request, daily_workation_id):
@@ -213,3 +226,11 @@ def work_rest_graph(request, daily_workation_id):
         'ratio' : rest_time / (work_time + rest_time) * 100,
         'status' : 200 
         })
+
+class WorkationRest(generics.ListCreateAPIView):
+    queryset = Workation_rest.objects.all()
+    serializer_class = RestSerializer
+
+class WorkationSpace(generics.ListCreateAPIView):
+    queryset = Workation_space.objects.all()
+    serializer_class = SpaceSerializer
