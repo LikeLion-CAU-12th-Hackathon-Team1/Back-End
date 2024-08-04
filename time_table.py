@@ -16,14 +16,16 @@ class CreateTimeTable():
         Sleep start at 2400 means that the service user goes to bed at 00:00.
         Sleep end time: {sleep_end_time}
         Sleep end at 0600 means that the service user wakes up at 06:00.
+        From sleep start time to sleep end time is sleeping time. So you must not fill the time during sleep.
         Work start time: {work_style}
         If work start time is 1, you should start work at 080000.
         If work start time is 2, you should start work at 130000.
         If work start time is 3, you should start work at 160000.
         Work/rest balance: {work_rest_balance}
-        If work/rest balance is 1, total work time should be 9 hours and total rest time should be 5 hours.
+        If work/rest balance is 1, total work time should be 8 hours and total rest time should be 6 hours.
         If work/rest balance is 2, total work time should be 7 hours and total rest time should be 7 hours.
-        If work/rest balance is 3, total work time should be 5 hours and total rest time should be 9 hours.
+        If work/rest balance is 3, total work time should be 6 hours and total rest time should be 8 hours.
+        Both total work time and rest time must be exactly same with the input data.
         The schedule of the timetable is always set on time.
         The schedule of the timetable do not have to fill the whole day.
 
@@ -90,8 +92,8 @@ class CreateTimeTable():
         response_msg = response.choices[0].message.content
         data = json.loads(response_msg)
         schedule_list = data['schedule']
-        # print(schedule_list)
+        print(schedule_list)
         return schedule_list
 
-# ctt = CreateTimeTable()
-# ctt.create_time_table(2400, 600, 1, 3)
+ctt = CreateTimeTable()
+ctt.create_time_table('040000', '110000', 2, 1)
