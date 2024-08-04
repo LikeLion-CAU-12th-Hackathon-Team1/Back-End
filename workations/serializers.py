@@ -85,27 +85,33 @@ class WorkationSerializer(serializers.ModelSerializer):
         return ret
     
     def validate_start_date(self, value):
+        user = self.initial_data['user']
+        workations = Workation.objects.filter(user=user)
+
         if datetime.date.today() > value:
             raise serializers.ValidationError("Start date must be later than today.")
+        if workations.filter(Q(start_date__lte=value) & Q(end_date__gte=value)).exists():
+            raise serializers.ValidationError("Start date overlaps with existing workation.")
         return value
     
     def validate_end_date(self, value):
-        if self.initial_data['start_date'] > self.initial_data['end_date']:
+        user = self.initial_data['user']
+        workations = Workation.objects.filter(user=user)
+
+        if self.initial_data['start_date'] > value:
             raise serializers.ValidationError("End date must be later than start date.")
+        if workations.filter(Q(start_date__lte=value) & Q(end_date__gte=value)).exists():
+            raise serializers.ValidationError("Start date overlaps with existing workation.")
         return value
     
-    # validation 과정 수정 필요함
-    # exist 사용해서 검증하도록 수정
     def validate(self, validated_data):
         user = self.initial_data['user']
         workations = Workation.objects.filter(user=user)
-        if workations.filter(Q(start_date__lte=validated_data['start_date']) & Q(end_date__gte=validated_data['start_date'])):
+        
+        if workations.filter(Q(start_date__gte=validated_data['start_date']) & Q(end_date__lte=validated_data['end_date'])).exists():
             raise serializers.ValidationError("Start date overlaps with existing workation.")
-        if workations.filter(Q(start_date__lte=validated_data['end_date']) & Q(end_date__gte=validated_data['end_date'])):
-            raise serializers.ValidationError("Start date overlaps with existing workation.")
-        if workations.filter(Q(start_date__gte=validated_data['start_date']) & Q(end_date__lte=validated_data['end_date'])):
-            raise serializers.ValidationError("Start date overlaps with existing workation.")
-
+        if workations.filter(Q(end_date__gte=datetime.date.today())).exists():
+            raise serializers.ValidationError("There is workation uncompleted.")
         return validated_data
     
 # 1일 단위 워케이션.
