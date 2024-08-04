@@ -12,6 +12,8 @@ from django.views.decorators.http import require_GET
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from rest_framework_simplejwt.views import TokenRefreshView
+from config.permissions import IsOwner
+from django.contrib.auth.decorators import login_required
 
 # Create your views here.
 class ListCreateWorkation(generics.ListCreateAPIView):
@@ -250,19 +252,16 @@ class WorkationSpace(generics.ListCreateAPIView):
 
 class TokenRefresh(TokenRefreshView):
     pass
-
-
-# 추가
-def timer(request):
-    if request.method == 'GET':
-        queryset = Daily_workation.objects.filter(workation__user=request.user)
+    
+class TimerView(generics.RetrieveAPIView):
+    model = Time_workation
+    
+    def get(self, request, daily_workation_id):
+        daily_workation = get_object_or_404(Daily_workation, pk=daily_workation_id)
+        time_workations = Time_workation.objects.filter(daily_workation_id=daily_workation.daily_workation_id)
         
         now = datetime.now()
-        ten_minutes_from_now = (now + timedelta(minutes=37)).time()
-        matching_end_time_exists = queryset.filter(Q(end_time__lte=ten_minutes_from_now)).exists()
-
-        response_data = {
-            'exists': matching_end_time_exists
-        }
-        
-        return JsonResponse(response_data)
+        after_five = now + timedelta(minutes=5)
+        after_ten = now + timedelta(minutes=15)
+        matching_end_time_exists = time_workations.filter(Q(end_time__gt=after_five) & Q(end_time__lte=after_ten)).exists()
+        return Response(data=matching_end_time_exists, status=status.HTTP_200_OK)
