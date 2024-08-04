@@ -188,7 +188,7 @@ class ClosestFutureWorkation(generics.RetrieveAPIView):
     def get_queryset(self):
         return Workation.objects.filter(user=self.request.user)
     
-    def get(self):
+    def get(self, request):
         workations = self.get_queryset().filter(end_date__gte=datetime.today())
         closest_workation = workations.last()
         if closest_workation:
