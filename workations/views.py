@@ -255,13 +255,21 @@ class TokenRefresh(TokenRefreshView):
     
 class TimerView(generics.RetrieveAPIView):
     model = Time_workation
+
+    def get_queryset(self):
+        return Daily_workation.objects.filter(workation__user=self.request.user)
     
-    def get(self, request, daily_workation_id):
-        daily_workation = get_object_or_404(Daily_workation, pk=daily_workation_id)
+    def get(self, request):
+        daily_workations = self.get_queryset()
+        try:
+            daily_workation = daily_workations.get(date=datetime.now().date())
+        except:
+            return Response(data=False, status=status.HTTP_200_OK)
+        
         time_workations = Time_workation.objects.filter(daily_workation_id=daily_workation.daily_workation_id)
         
         now = datetime.now()
-        after_five = now + timedelta(minutes=5)
+        after_five = now + timedelta(minutes=0)
         after_ten = now + timedelta(minutes=15)
         matching_end_time_exists = time_workations.filter(Q(end_time__gt=after_five) & Q(end_time__lte=after_ten)).exists()
         return Response(data=matching_end_time_exists, status=status.HTTP_200_OK)
