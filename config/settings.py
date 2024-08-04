@@ -209,7 +209,7 @@ REST_FRAMEWORK = {
     ),
     # JWT 토큰을 사용해서 인증을 하기 위해 설정
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
+        'config.permissions.IsOwner',
     ],
 }
 

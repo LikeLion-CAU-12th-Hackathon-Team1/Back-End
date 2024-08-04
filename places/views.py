@@ -11,6 +11,7 @@ from rest_framework.generics import ListCreateAPIView
 from rest_framework.permissions import AllowAny
 
 class ListCreatePlace(views.APIView):
+    permission_classes = [AllowAny]
     serializer_class = PlaceCreateSerializer
     queryset = Place.objects.all()
 
@@ -51,9 +52,11 @@ class CategoryPlace(views.APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 class SidoListCreateAPIView(ListCreateAPIView):
+    permission_classes = [AllowAny]
     queryset = Sido.objects.all()
     serializer_class = ListSidoSerializer
 
 class SiggListCreateAPIView(ListCreateAPIView):
+    permission_classes = [AllowAny]
     queryset = Sigg.objects.all()
     serializer_class = ListSiggSerializer

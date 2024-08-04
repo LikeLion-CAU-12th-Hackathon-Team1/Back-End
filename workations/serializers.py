@@ -53,9 +53,10 @@ class WorkationSerializer(serializers.ModelSerializer):
         time_table_creator = CreateTimeTable()
         base_time_table = time_table_creator.create_time_table(
             validated_data['start_sleep'], 
-            validated_data['end_sleep'], 
-            # gpt 프롬프트 수정하고 변경해야 함.
-            8, 6, 10)
+            validated_data['end_sleep'],
+            validated_data['work_style'],
+            validated_data['work_purpose']
+            )
 
         current_date = validated_data['start_date']
         end_date = validated_data['end_date']
@@ -86,19 +87,36 @@ class DailyWorkationSerializer(serializers.ModelSerializer):
     workation = PrimaryKeyRelatedField(queryset=Workation.objects.all())
     base_time_table = JSONField(required=False)
     memo = serializers.CharField(required=False)
+    queryset = Daily_workation.objects.all().order_by('date')
 
     class Meta:
         model = Daily_workation
         fields = '__all__'
 
     def create(self, validated_data):
-        workation = validated_data.pop('workation')
-        base_time_table = validated_data.pop('base_time_table')
-        daily_workation = Daily_workation.objects.create(workation=workation, **validated_data)
+        base_time_table = validated_data.pop('base_time_table', None)
+        # workation = validated_data.pop('workation')
+        # daily_workation = Daily_workation.objects.create(workation=workation, **validated_data)
+        daily_workation = super().create(validated_data)
+        if base_time_table is not None:
+            for time_data in base_time_table:
+                time_data['daily_workation'] = daily_workation.daily_workation_id
+                # time_data['start_time'] = int(time_data['start_time'])
+                # time_data['end_time'] = int(time_data['end_time'])
 
-        for time_data in base_time_table:
-            time_data['daily_workation'] = daily_workation.daily_workation_id
-            serializer = TimeWorkationSerializer(data = time_data)
+                hours = int(time_data['start_time'][:2])
+                minutes = int(time_data['start_time'][2:4])
+                seconds = int(time_data['start_time'][4:])
+                time_data['start_time'] = datetime.time(hours, minutes, seconds)
+                if time_data['end_time'] == '240000':
+                    time_data['end_time'] = datetime.time(23, 59, 59)
+                else:
+                    hours = int(time_data['end_time'][:2])
+                    minutes = int(time_data['end_time'][2:4])
+                    seconds = int(time_data['end_time'][4:6])
+                    time_data['end_time'] = datetime.time(hours, minutes, seconds)
+
+                serializer = TimeWorkationSerializer(data = time_data)
             if serializer.is_valid():
                 serializer.save()
             else:
@@ -115,8 +133,8 @@ class DailyWorkationSerializer(serializers.ModelSerializer):
 # 할 일.
 class TaskSerializer(serializers.ModelSerializer):
     daily_workation = PrimaryKeyRelatedField(queryset=Daily_workation.objects.all(), required=False)
-    time_workation = PrimaryKeyRelatedField(queryset=Time_workation.objects.all(), required=True)
-    task = serializers.CharField(required=True)
+    time_workation = PrimaryKeyRelatedField(queryset=Time_workation.objects.all(), required=False)
+    description = serializers.CharField(required=False)
     complete = serializers.BooleanField(required=False)
 
     class Meta:
@@ -124,23 +142,24 @@ class TaskSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def create(self, validated_data):
-        time_workation = validated_data.pop('time_workation', None)
-        if time_workation is None:
-            raise serializers.ValidationError("Time_workation must be provided.")
-        super().create(validated_data)
-
-        serializer = TimeTaskSerializer(data = time_workation)
-
+        time_workation = validated_data.pop('time_workation')
+        validated_data['daily_workation'] = time_workation.daily_workation
+        task = super().create(validated_data)
+        time_task_data = {
+            'task': task.task_id,
+            'time_workation': time_workation.time_workation_id
+        }
+        serializer = TimeTaskSerializer(data=time_task_data)
+        if serializer.is_valid():
+            serializer.save()
+        return task
+    
+    def to_representation(self, instance):
+        if instance.complete == 2:
+            instance.complete = False
+        return super().to_representation(instance)
 
 # 시간 단위 워케이션-할 일 중간 테이블.
-# class TimeTaskSerializer(serializers.ModelSerializer):
-#     task = TaskSerializer(many=True)
-
-#     class Meta:
-#         model = Time_task
-#         read_only_fields = ('time_workation_id', 'task_id')
-#         fields = ('task',)
-
 class TimeTaskSerializer(serializers.ModelSerializer):
     task = PrimaryKeyRelatedField(queryset=Task.objects.all())
     time_workation = PrimaryKeyRelatedField(queryset=Time_workation.objects.all())
@@ -179,14 +198,20 @@ class TimeWorkationSerializer(serializers.ModelSerializer):
         return queryset
     
     def create(self, validated_data):
-        hours = validated_data['start_time'] // 10000
-        minutes = (validated_data['start_time'] % 10000) // 100
-        seconds = validated_data['start_time'] % 100
-        validated_data['start_time'] = datetime.time(hours, minutes, seconds)
-        hours = validated_data['end_time'] // 10000
-        minutes = (validated_data['end_time'] % 10000) // 100
-        seconds = validated_data['end_time'] % 100
-        validated_data['end_time'] = datetime.time(hours, minutes, seconds)
+        if type(validated_data['start_time']) != datetime.time:
+            start_time = validated_data['start_data']
+            hours = int(start_time[:2])
+            minutes = int(start_time[2:4])
+            seconds = int(start_time[4:6])
+            validated_data['start_time'] = datetime.time(hours, minutes, seconds)
+            end_time = validated_data['end_time']
+            if end_time == "240000":
+                validated_data['end_time'] = datetime.time(23, 59, 59)
+            else:
+                hours = int(end_time[:2])
+                minutes = int(end_time[2:4])
+                seconds = int(end_time[4:6])
+                validated_data['end_time'] = datetime.time(hours, minutes, seconds)
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
@@ -198,6 +223,31 @@ class TimeWorkationSerializer(serializers.ModelSerializer):
         representation['start_time'] = instance.start_time.strftime('%H%M%S')
         representation['end_time'] = instance.end_time.strftime('%H%M%S')
         return representation
+    
+    def validate_start_time(self, value):
+        times = Time_workation.objects.filter(daily_workation=self.initial_data['daily_workation'])
+        for time in times:
+            if time.start_time < value < time.end_time:
+                raise serializers.ValidationError("Start time overlaps with existing time.")
+        return value
+    
+    def validate_end_time(self, value):
+        times = Time_workation.objects.filter(daily_workation=self.initial_data['daily_workation'])
+        for time in times:
+            if time.start_time < value < time.end_time:
+                raise serializers.ValidationError("End time overlaps with existing time.")
+        return value
+    
+    def validate(self, validated_data):
+        daily_workation = validated_data.get('daily_workation', None)
+        if daily_workation is not None:
+            times = Time_workation.objects.filter(daily_workation=daily_workation)
+            for time in times:
+                if validated_data['start_time'] <= time.start_time and validated_data['end_time'] >= time.end_time:
+                    raise serializers.ValidationError("Time overlaps with existing time.")
+                if time.start_time <= validated_data['start_time'] and time.end_time >= validated_data['end_time']:
+                    raise serializers.ValidationError("Time overlaps with existing time.")
+        return validated_data
 
 class TodayWorkationSerializer(serializers.ModelSerializer):
     class Meta:
