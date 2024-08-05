@@ -267,31 +267,6 @@ class TimeWorkationSerializer(serializers.ModelSerializer):
                 
         return validated_data
 
-class TimeWorkatoinUpdateSerializer(serializers.ModelSerializer):
-    start_time = serializers.TimeField(format='%H%M%S', input_formats=['%H%M%S'], required=False)
-    end_time = serializers.TimeField(format='%H%M%S', input_formats=['%H%M%S'], required=False)
-
-    class Meta:
-        model = Time_workation
-        fields = '__all__'
-
-    def validate_start_time(self, value):
-        time_workations = Time_workation.objects.filter(daily_workation=self.instance.daily_workation.daily_workation_id)
-        if time_workations.filter(Q(start_time__lte=value) & Q(end_time__gt=value)):
-            serializers.ValidationError("Start time overlaps with existing time.")
-        return value
-
-    def validate_end_time(self, instance, value):
-        time_workations = Time_workation.objects.filter(daily_workaion=self.instance.workatoin.workation_id)
-        if time_workations.filter(Q(start_time__lt=value) & Q(end_time__gte=value)).exists():
-            serializers.ValidationError("End time overlaps with existing time")
-        return value
-
-class TodayWorkationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Daily_workation
-        fields = '__all__'
-
 class SpaceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Space
