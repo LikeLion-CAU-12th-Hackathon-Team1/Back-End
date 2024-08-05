@@ -108,6 +108,8 @@ class WorkationSerializer(serializers.ModelSerializer):
         user = self.initial_data['user']
         workations = Workation.objects.filter(user=user)
         
+        if validated_data['start_date'] + datetime.timedelta(days=7) <= validated_data['end_date']:
+            raise serializers.ValidationError("Max period of workation is a week")
         if workations.filter(Q(start_date__gte=validated_data['start_date']) & Q(end_date__lte=validated_data['end_date'])).exists():
             raise serializers.ValidationError("Start date overlaps with existing workation.")
         if workations.filter(Q(end_date__gte=datetime.date.today())).exists():
