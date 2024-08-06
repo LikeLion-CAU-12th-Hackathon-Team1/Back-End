@@ -12,8 +12,6 @@ from django.views.decorators.http import require_GET
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from rest_framework_simplejwt.views import TokenRefreshView
-from config.permissions import IsOwner
-from django.contrib.auth.decorators import login_required
 
 # Create your views here.
 class ListCreateWorkation(generics.ListCreateAPIView):
