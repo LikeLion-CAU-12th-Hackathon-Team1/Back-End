@@ -14,6 +14,21 @@ Time on the timetable must not be out of this range.
 The timetable that you construct is on a daily basis. The next day is not considered.
 The timetable do not have to fill the whole day. Empty time periods are acceptable.
 
+Sleep_start_time: {sleep_start_time}
+Sleep_end_time: {sleep_end_time}
+For sleep_start_time and sleep_end_time, there input value is number.
+For example, value 0 means 00:00:00, 700 means 07:00:00, 1400 means 14:00:00, 2400 means 00:00:00.
+You have to focus on the sleep_time from sleep_start_time to sleep_end_time.
+Do not assign a schedule to sleep_time.
+work_style: {work_style}
+If work_style is 1, we will start work from 08:00:00.
+If work_style is 2, we will start work from 11:00:00.
+If work_style is 3, we will start work from 14:00:00.
+work_rest_balance: {work_rest_balance}
+If work_style is 1, the working hours are 8 hours and the rest is 6 hours.
+If work_style is 2, the working hours are 6 hours and the rest is 6 hours.
+If work_style is 3, the working hours are 6 hours and the rest is 8 hours.
+
 The timetable consists of four types of schedules: 'work', 'rest', 'sleep', and 'blank'.
 'work' is a time to work.
 The timetable should include at least two schedules corresponding to 'work'.
@@ -197,3 +212,6 @@ So if there is no 'schedule' keyword, you must put 'schedule' keyword in your re
         schedule_list = data['schedule']
         # print(schedule_list)
         return schedule_list
+    
+# ctt = CreateTimeTable()
+# ctt.create_time_table(200, 1100, 2, 1)
