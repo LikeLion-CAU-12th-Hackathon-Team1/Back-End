@@ -135,7 +135,7 @@ class DailyWorkationSerializer(serializers.ModelSerializer):
         if base_time_table:
             for time_data in base_time_table:
                 time_data['daily_workation'] = daily_workation.daily_workation_id
-                if time_data['end_time'] == '240000':
+                if time_data['end_time'] == '240000' or time_data['end_time'] == '235900':
                     time_data['end_time'] = '235959'
 
                 serializer = TimeWorkationSerializer(data=time_data)
